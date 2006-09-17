@@ -1,0 +1,5152 @@
+--- emacspeak-24.orig/info/tts-server.texi
++++ emacspeak-24/info/tts-server.texi
+@@ -1,209 +1,209 @@
+-        @c $Id$
+-        @node TTS Servers
+-        @chapter Emacspeak TTS Servers
+-
+-        Emacspeak produces spoken output by communicating with one of many
+-        speech servers. This section documents the communication protocol
+-        between the client application i.e. Emacspeak, and the TTS
+-        server. This section is primarily intended for developers wishing to:
+-        @itemize @bullet
+-        @item Create new speech servers that comply with this communication
+-        protocol 
+-        @item Developers of other client applications   who wish to use
+-        the various Emacspeak speech servers.
+-        @end itemize
+-
+-        @subsection High-level Overview
+-
+-        The TTS server reads commands from standard input, and  script
+-        @emph{speech-server} can be used  to cause a TTS server to communicate
+-        via a TCP socket. Speech server commands are used by the client
+-        application to make specific requests of the server; the server
+-        listens for these requests in a non-blocking read loop and executes
+-        requests as they become available. Requests can be classified
+-        as follows:
+-        @itemize @bullet
+-        @item Commands that send text to be spoken.
+-        @item Commands that set @emph{state} of the TTS server.
+-        @end itemize
+-
+-        All commands are of the form 
+-        @example
+-        commandWord @{arguments@}
+-        @end example
+-        The braces are optional if the command argument contains no white
+-        space.  The speech server maintains a @emph{current state} that
+-        determines various characteristics of spoken output such as speech
+-        rate, punctuations mode etc. (see set of commands that manipulate
+-        speech state for complete list).  The client application @emph{queues} The
+-        text and non-speech audio output to be produced before asking the
+-        server to @emph{dispatch} the set of queued requests, i.e. start
+-        producing output.
+-
+-        Once the server has been asked to produce output, it removes items
+-        from the front of the queue, sends the requisite commands to the
+-        underlying TTS engine, and waits for the engine to acknowledge that
+-        the request has been completely processed. This is a non-blocking
+-        operation, i.e., if the client application generates additional
+-        requests, these are processed @emph{immediately}.
+-
+-        The above design allows the Emacspeak TTS server to be
+-        @emph{highly} responsive; Cleint applications can queue large
+-        amounts of text (typically queued a clause at a time to
+-        achieve the best prosody), ask the TTS server to start speaking,
+-        and interrupt the spoken output at any time.
+-
+-        @subsection Commands That Queue Output.
+-
+-        This section documents commands that either produce spoken
+-        output, or queue output to be produced on demand.
+-        Commands that place the request on the queue are clearly marked.
+-
+-        @example
+-        version
+-        @end example
+-
+-        Speaks the @emph{version} of the TTS engine. Produces output
+-        immediately.
+-
+-        @example
+-        tts_say text 
+-        @end example
+-
+-        Speaks the specified @emph{text} immediately. The text is not
+-        pre-processed in any way, contrast this with the primary way of
+-        speaking text which is to queue text before asking the server to
+-        process the queue.
+-
+-        @example
+-        l c
+-        @end example
+-
+-        Speak @emph{c} a single character, as a letter.  The character is
+-        spoken immediately. This command uses the TTS engine's capability to
+-        speak a single character with the ability to flush speech
+-        @emph{immediately}.  Client applications wishing to produce
+-        character-at-a-time output, e.g., when providing character echo during
+-        keyboard input should use this command.
+-
+-        @example
+-        d
+-        @end example
+-
+-        This command is used to @emph{dispatch} all queued requests.
+-        It was renamed to a single character command (like many of the
+-        commonly used TTS server commands) to work more effectively over
+-        slow (9600) dialup lines.
+-        The effect of calling this command is for the TTS server to start
+-        processing items that have been queued via earlier requests.
+-
+-        @example
+-        tts_pause
+-        @end example
+-
+-        This pauses speech @emph{immediately}.
+-        It does not affect queued requests; when command
+-        @emph{tts_resume} is called, the output resumes at the point
+-        where it was paused. Not all TTS engines provide this capability.
+-
+-        @example
+-        tts_resume
+-        @end example
+-
+-        Resume spoken output if it has been paused earlier.
+-
+-        @example
+-        s
+-        @end example
+-
+-        Stop speech @emph{immediately}.
+-        Spoken output is interrupted, and all pending requests are
+-        flushed from the queue.
+-
+-        @example
+-        q text
+-        @end example
+-
+-        Queues text to be spoken. No spoken output is produced until a
+-        @emph{dispatch} request is received via execution of command
+-        @emph{d}.
+-
+-        @example
+-        a filename
+-        @end example
+-
+-        Cues the audio file identified by filename for playing.
+-
+-        @example
+-        t freq length
+-        @end example
+-
+-        Queues a tone to be played at the specified frequency and having the
+-        specified length.  Frequency is specified in hertz and length is
+-        specified in milliseconds.
+-
+-        @example
+-        sh duration
+-        @end example
+-
+-        Queues the specified duration of silence. Silence is specified in
+-        milliseconds.
+-
+-        @subsection Commands That Set State
+-
+-        @example
+-        tts_reset
+-        @end example
+-
+-        Reset TTS engine to  default settings.
+-
+-        @example
+-        tts_set_punctuations mode
+-        @end example
+-
+-        Sets TTS engine to the specified punctuation mode. Typicaly, TTS
+-        servers provide at least three modes:
+-        @itemize @bullet
+-        @item None: Do not speak punctuation characters.
+-        @item some: Speak some punctuation characters. Used for English
+-        prose.
+-        @item all: Speak out @emph{all} punctuation characters; useful in
+-        programming modes.
+-        @end itemize
+-
+-        @example
+-        tts_set_speech_rate rate
+-        @end example
+-
+-        Sets speech rate. The interpretation of this value is typically
+-        engine specific.
+-
+-        @example
+-        tts_set_character_scale factor
+-        @end example
+-
+-        Scale factor applied to speech rate when speaking individual
+-        characters.Thus, setting speech rate to 500 and character
+-        scale to 1.2 will cause command @emph{l} to use a speech rate
+-        of @emph{500 * 1.2 = 600}.
+-
+-        @example    
+-        tts_split_caps flag
+-        @end example
+-
+-        Set state of @emph{split caps} processing. Turn this on to
+-        speak mixed-case (AKA Camel Case) identifiers.
+-
+-        @example
+-        tts_capitalize flag
+-        @end example
+-
+-        Indicate capitalization via a beep tone or voice  pitch.
+-
+-        @example
+-        tts_allcaps_beep flag
+-        @end example
++@c $Id$
++@node TTS Servers
++@chapter Emacspeak TTS Servers
++
++Emacspeak produces spoken output by communicating with one of many
++speech servers. This section documents the communication protocol
++between the client application i.e. Emacspeak, and the TTS
++server. This section is primarily intended for developers wishing to:
++@itemize @bullet
++@item Create new speech servers that comply with this communication
++protocol 
++@item Developers of other client applications   who wish to use
++the various Emacspeak speech servers.
++@end itemize
++
++@subsection High-level Overview
++
++The TTS server reads commands from standard input, and  script
++@emph{speech-server} can be used  to cause a TTS server to communicate
++via a TCP socket. Speech server commands are used by the client
++application to make specific requests of the server; the server
++listens for these requests in a non-blocking read loop and executes
++requests as they become available. Requests can be classified
++as follows:
++@itemize @bullet
++@item Commands that send text to be spoken.
++@item Commands that set @emph{state} of the TTS server.
++@end itemize
++
++All commands are of the form 
++@example
++commandWord @{arguments@}
++@end example
++The braces are optional if the command argument contains no white
++space.  The speech server maintains a @emph{current state} that
++determines various characteristics of spoken output such as speech
++rate, punctuations mode etc. (see set of commands that manipulate
++speech state for complete list).  The client application @emph{queues} The
++text and non-speech audio output to be produced before asking the
++server to @emph{dispatch} the set of queued requests, i.e. start
++producing output.
++
++Once the server has been asked to produce output, it removes items
++from the front of the queue, sends the requisite commands to the
++underlying TTS engine, and waits for the engine to acknowledge that
++the request has been completely processed. This is a non-blocking
++operation, i.e., if the client application generates additional
++requests, these are processed @emph{immediately}.
++
++The above design allows the Emacspeak TTS server to be
++@emph{highly} responsive; Cleint applications can queue large
++amounts of text (typically queued a clause at a time to
++achieve the best prosody), ask the TTS server to start speaking,
++and interrupt the spoken output at any time.
++
++@subsection Commands That Queue Output.
++
++This section documents commands that either produce spoken
++output, or queue output to be produced on demand.
++Commands that place the request on the queue are clearly marked.
++
++@example
++version
++@end example
++
++Speaks the @emph{version} of the TTS engine. Produces output
++immediately.
++
++@example
++tts_say text 
++@end example
++
++Speaks the specified @emph{text} immediately. The text is not
++pre-processed in any way, contrast this with the primary way of
++speaking text which is to queue text before asking the server to
++process the queue.
++
++@example
++l c
++@end example
++
++Speak @emph{c} a single character, as a letter.  The character is
++spoken immediately. This command uses the TTS engine's capability to
++speak a single character with the ability to flush speech
++@emph{immediately}.  Client applications wishing to produce
++character-at-a-time output, e.g., when providing character echo during
++keyboard input should use this command.
++
++@example
++d
++@end example
++
++This command is used to @emph{dispatch} all queued requests.
++It was renamed to a single character command (like many of the
++commonly used TTS server commands) to work more effectively over
++slow (9600) dialup lines.
++The effect of calling this command is for the TTS server to start
++processing items that have been queued via earlier requests.
++
++@example
++tts_pause
++@end example
++
++This pauses speech @emph{immediately}.
++It does not affect queued requests; when command
++@emph{tts_resume} is called, the output resumes at the point
++where it was paused. Not all TTS engines provide this capability.
++
++@example
++tts_resume
++@end example
++
++Resume spoken output if it has been paused earlier.
++
++@example
++s
++@end example
++
++Stop speech @emph{immediately}.
++Spoken output is interrupted, and all pending requests are
++flushed from the queue.
++
++@example
++q text
++@end example
++
++Queues text to be spoken. No spoken output is produced until a
++@emph{dispatch} request is received via execution of command
++@emph{d}.
++
++@example
++a filename
++@end example
++
++Cues the audio file identified by filename for playing.
++
++@example
++t freq length
++@end example
++
++Queues a tone to be played at the specified frequency and having the
++specified length.  Frequency is specified in hertz and length is
++specified in milliseconds.
++
++@example
++sh duration
++@end example
++
++Queues the specified duration of silence. Silence is specified in
++milliseconds.
++
++@subsection Commands That Set State
++
++@example
++tts_reset
++@end example
++
++Reset TTS engine to  default settings.
++
++@example
++tts_set_punctuations mode
++@end example
++
++Sets TTS engine to the specified punctuation mode. Typicaly, TTS
++servers provide at least three modes:
++@itemize @bullet
++@item None: Do not speak punctuation characters.
++@item some: Speak some punctuation characters. Used for English
++prose.
++@item all: Speak out @emph{all} punctuation characters; useful in
++programming modes.
++@end itemize
++
++@example
++tts_set_speech_rate rate
++@end example
++
++Sets speech rate. The interpretation of this value is typically
++engine specific.
++
++@example
++tts_set_character_scale factor
++@end example
++
++Scale factor applied to speech rate when speaking individual
++characters.Thus, setting speech rate to 500 and character
++scale to 1.2 will cause command @emph{l} to use a speech rate
++of @emph{500 * 1.2 = 600}.
++
++@example    
++tts_split_caps flag
++@end example
++
++Set state of @emph{split caps} processing. Turn this on to
++speak mixed-case (AKA Camel Case) identifiers.
++
++@example
++tts_capitalize flag
++@end example
++
++Indicate capitalization via a beep tone or voice  pitch.
++
++@example
++tts_allcaps_beep flag
++@end example
+ 
+-        Setting this flag produces  a high-pitched beep when speaking words that are in
+-        all-caps, e.g. abbreviations.
++Setting this flag produces  a high-pitched beep when speaking words that are in
++all-caps, e.g. abbreviations.
+ 
+--- emacspeak-24.orig/info/tts.texi
++++ emacspeak-24/info/tts.texi
+@@ -1,5 +1,4 @@
+ @c $Id$
+- @section Speech System Commands
+ 
+ @cindex tts
+ @cindex speech system
+@@ -10,7 +9,7 @@
+ 
+ @menu
+ * Controlling Echo::             Character, Word and Line Echo.
+-* Speech Output  Control::       Indicating case, capitalization and indentation.
++* Speech Output Control::        Indicating case, capitalization and indentation.
+ * Miscellaneous:: Miscellaneous TTS Commands.
+ @end menu
+ 
+@@ -36,30 +35,30 @@
+ 
+ @table @kbd 
+ @findex  emacspeak-toggle-character-echo
+- @kindex  control e d k 
++@kindex  control e d k 
+ @item  @kbd{control e d k }
+ emacspeak-toggle-character-echo
+- Toggle state of  Emacspeak  character echo.
++Toggle state of  Emacspeak  character echo.
+ Interactive PREFIX arg means toggle  the global default value, and then set the
+ current local  value to the result.
+ 
+ 
+ @findex  emacspeak-toggle-word-echo
+- @kindex  control e d w 
+- 
++@kindex  control e d w 
++
+ @item @kbd{ control e d w }
+ emacspeak-toggle-word-echo
+- Toggle state of  Emacspeak  word echo.
++Toggle state of  Emacspeak  word echo.
+ Interactive PREFIX arg means toggle  the global default value, and then set the
+ current local  value to the result.
+ 
+ 
+ @findex  emacspeak-toggle-line-echo
+- @kindex  control e d l 
+- 
++@kindex  control e d l 
++
+ @item @kbd{ control e d l }
+ emacspeak-toggle-line-echo
+- Toggle state of  Emacspeak  line echo.
++Toggle state of  Emacspeak  line echo.
+ Interactive PREFIX arg means toggle  the global default value, and then set the
+ current local  value to the result.
+ @end table
+@@ -82,21 +81,21 @@
+ @table @kbd 
+ 
+ @findex  dtk-set-rate
+- @kindex  control e d r 
+- 
++@kindex  control e d r 
++
+ @item @kbd{ control e d r }
+ dtk-set-rate
+- Set speaking RATE for the tts.
++Set speaking RATE for the tts.
+ Interactive PREFIX arg means set   the global default value, and then set the
+ current local  value to the result.
+ 
+ 
+ @findex  dtk-set-character-scale
+- @kindex  control e d f 
+- 
++@kindex  control e d f 
++
+ @item @kbd{ control e d f }
+ dtk-set-character-scale
+- Set scale FACTOR for   speech rate.
++Set scale FACTOR for   speech rate.
+ Speech rate is scaled by this factor
+ when speaking characters.
+ Interactive PREFIX arg means set   the global default value, and then set the
+@@ -109,20 +108,20 @@
+ 
+ 
+ @findex  dtk-set-predefined-speech-rate
+- @kindex  control e d 9   control e d 8   control e d 7   control e d 6   control e d 5   control e d 4   control e d 3   control e d 2   control e d 1   control e d 0 
+- 
++@kindex  control e d 9   control e d 8   control e d 7   control e d 6   control e d 5   control e d 4   control e d 3   control e d 2   control e d 1   control e d 0 
++
+ @item @kbd{ control e d 9   control e d 8   control e d 7   control e d 6   control e d 5   control e d 4   control e d 3   control e d 2   control e d 1   control e d 0 }
+ dtk-set-predefined-speech-rate
+- Set speech rate to one of nine predefined levels.
++Set speech rate to one of nine predefined levels.
+ Interactive PREFIX arg says to set the rate globally.
+ 
+ 
+ @findex  dtk-set-punctuations
+- @kindex  control e d p 
+- 
++@kindex  control e d p 
++
+ @item @kbd{ control e d p }
+ dtk-set-punctuations
+- Set punctuation mode to MODE.
++Set punctuation mode to MODE.
+ Possible values are `some', `all', or `none'.
+ Interactive PREFIX arg means set   the global default value, and then set the
+ current local  value to the result.
+@@ -130,11 +129,11 @@
+ 
+ 
+ @findex  dtk-set-pronunciation-mode
+- @kindex  control e d m 
+- 
++@kindex  control e d m 
++
+ @item @kbd{ control e d m }
+ dtk-set-pronunciation-mode
+- Set pronunciation MODE.
++Set pronunciation MODE.
+ This command is valid only for newer
+ Dectalks, e.g.  the Dectalk Express.  Possible values are `math, name,
+ europe, spell', all of which can be turned on or off.
+@@ -143,11 +142,11 @@
+ 
+ 
+ @findex  dtk-toggle-split-caps
+- @kindex  control e d s 
++@kindex  control e d s 
+ 
+ @item @kbd{ control e d s }
+ dtk-toggle-split-caps
+- Toggle split caps mode.
++Toggle split caps mode.
+ Split caps mode is useful when reading
+ Hungarian notation in program source code.  Interactive PREFIX arg
+ means toggle the global default value, and then set the current local
+@@ -155,22 +154,22 @@
+ 
+ 
+ @findex  dtk-toggle-capitalization
+- @kindex  control e d c 
+- 
++@kindex  control e d c 
++
+ @item @kbd{ control e d c }
+ dtk-toggle-capitalization
+- Toggle capitalization.
++Toggle capitalization.
+ when set, capitalization is indicated by a
+ short beep.  Interactive PREFIX arg means toggle the global default
+ value, and then set the current local value to the result.
+ 
+ 
+ @findex  dtk-toggle-allcaps-beep
+- @kindex  control e d  cap C  
+- 
++@kindex  control e d  cap C  
++
+ @item @kbd{ control e d  cap C  }
+ dtk-toggle-allcaps-beep
+- Toggle allcaps-beep.
++Toggle allcaps-beep.
+ when set, allcaps words  are  indicated by a
+ short beep.  Interactive PREFIX arg means toggle the global default
+ value, and then set the current local value to the result.
+@@ -188,11 +187,11 @@
+ @table @kbd
+ 
+ @findex  emacspeak-toggle-audio-indentation
+- @kindex  control e d i 
+- 
++@kindex  control e d i 
++
+ @item @kbd{ control e d i }
+ emacspeak-toggle-audio-indentation
+- Toggle state of  Emacspeak  audio indentation.
++Toggle state of  Emacspeak  audio indentation.
+ Interactive PREFIX arg means toggle  the global default value, and then set the
+ current local  value to the result.
+ Specifying the method of indentation as `tones'
+@@ -227,19 +226,19 @@
+ @table @kbd
+ 
+ @findex  dtk-stop
+- @kindex     pause   control e s   
+- 
++@kindex     pause   control e s   
++
+ @item @kbd{Control e s}
+ dtk-stop
+- Stop speech now.
++Stop speech now.
+ 
+ 
+ @findex  dtk-pause
+- @kindex  control e p 
+- 
++@kindex  control e p 
++
+ @item @kbd{ control e p }
+ dtk-pause
+- Pause ongoing speech.
++Pause ongoing speech.
+ The speech can be resumed with command `dtk-resume'
+ normally bound to C-e SPC.  Pausing speech is useful when one needs to
+ perform a few actions before continuing to read a large document.  Emacspeak
+@@ -250,24 +249,24 @@
+ 
+ 
+ @findex  dtk-resume
+- @kindex  control e SPACE 
+- 
++@kindex  control e SPACE 
++
+ @item @kbd{ control e SPACE }
+ dtk-resume
+- Resume paused speech.
++Resume paused speech.
+ This command resumes  speech that has been suspended by executing
+ command `dtk-pause' bound to C-e p.
+ If speech has not been paused,
+ and variable `dtk-resume-should-toggle' is t
+- then this command will pause ongoing speech.
++then this command will pause ongoing speech.
+ 
+ 
+ @findex  dtk-toggle-quiet
+- @kindex  control e d q 
+- 
++@kindex  control e d q 
++
+ @item @kbd{ control e d q }
+ dtk-toggle-quiet
+- Toggle state of the speech device between being quiet and talkative.
++Toggle state of the speech device between being quiet and talkative.
+ Useful if you want to continue using an Emacs session that has
+ emacspeak loaded but wish to make the speech shut up.
+ Optional argument PREFIX specifies whether speech is turned off in the current buffer or in all buffers.
+@@ -275,11 +274,11 @@
+ 
+ 
+ @findex  dtk-emergency-restart
+- @kindex  control e control s 
+- 
++@kindex  control e control s 
++
+ @item @kbd{ control e control s }
+ dtk-emergency-restart
+- Use this to nuke the currently running dtk server and restart it.
++Use this to nuke the currently running dtk server and restart it.
+ Useful if you want to switch to another synthesizer while emacspeak is
+ running.  Also useful for emergency stopping of speech.
+ 
+@@ -293,11 +292,11 @@
+ @table @kbd
+ 
+ @findex  dtk-add-cleanup-pattern
+- @kindex  control e d a 
+- 
++@kindex  control e d a 
++
+ @item @kbd{ control e d a }
+ dtk-add-cleanup-pattern
+- Add this pattern to the list of repeating patterns that are cleaned up.
++Add this pattern to the list of repeating patterns that are cleaned up.
+ Optional interactive prefix arg deletes  this pattern if
+ previously added.  Cleaning up repeated patterns results in emacspeak
+ speaking the pattern followed by a repeat count instead of speaking
+@@ -310,22 +309,22 @@
+ 
+ 
+ @findex  dtk-select-server
+- @kindex  control e d d 
+- 
++@kindex  control e d d 
++
+ @item @kbd{ control e d d }
+ dtk-select-server
+- Select a speech server interactively.
++Select a speech server interactively.
+ This will be the server that is used when you next call either
+ M-x dtk-initialize or C-e C-s.
+ Argument PROGRAM specifies the speech server program.
+ 
+ 
+ @findex  dtk-toggle-splitting-on-white-space
+- @kindex  control e d SPACE 
+- 
++@kindex  control e d SPACE 
++
+ @item @kbd{ control e d SPACE }
+ dtk-toggle-splitting-on-white-space
+- Toggle splitting of speech on white space.
++Toggle splitting of speech on white space.
+ This affects the internal state of emacspeak that decides if we split
+ text purely by clause boundaries, or also include
+ whitespace.  By default, emacspeak sends a clause at a time
+@@ -342,37 +341,37 @@
+ 
+ 
+ @findex  dtk-set-chunk-separator-syntax
+- @kindex  control e d RETURN 
+- 
++@kindex  control e d RETURN 
++
+ @item @kbd{ control e d RETURN }
+ dtk-set-chunk-separator-syntax
+- Interactively set how text is split in chunks.
++Interactively set how text is split in chunks.
+ See the Emacs documentation on syntax tables for details on how characters are
+ classified into various syntactic classes.
+ Argument S specifies the syntax class.
+ 
+ 
+ @findex  emacspeak-dial-dtk
+- @kindex  control e d t 
+- 
++@kindex  control e d t 
++
+ @item @kbd{ control e d t }
+ emacspeak-dial-dtk
+- Prompt for and dial a phone NUMBER with the Dectalk.
++Prompt for and dial a phone NUMBER with the Dectalk.
+ 
+ 
+ @findex  emacspeak-dtk-speak-version
+- @kindex  control e d  cap V  
+- 
++@kindex  control e d  cap V  
++
+ @item @kbd{ control e d  cap V  }
+ emacspeak-dtk-speak-version
+- Use this to find out which version of the TTS firmware you are running.
++Use this to find out which version of the TTS firmware you are running.
+ 
+ 
+ @findex  emacspeak-zap-dtk
+- @kindex  control e d z 
+- 
++@kindex  control e d z 
++
+ @item @kbd{ control e d z }
+ emacspeak-zap-dtk
+- Send this command to the TTS engine  directly.
++Send this command to the TTS engine  directly.
+ 
+ @end table
+--- emacspeak-24.orig/info/emacspeak.texi
++++ emacspeak-24/info/emacspeak.texi
+@@ -12,7 +12,7 @@
+ 
+ @include preamble.texi
+ @include copyright.texi
+-@include announce.texi     
++@include announce.texi
+ @include introduction.texi
+ @include install.texi
+ @include using.texi
+--- emacspeak-24.orig/servers/tts-lib.tcl
++++ emacspeak-24/servers/tts-lib.tcl
+@@ -1,3 +1,4 @@
++#!/usr/bin/tclsh
+ #$Id$
+ # {{{ LCD Entry: 
+ #x
+--- emacspeak-24.orig/etc/Makefile
++++ emacspeak-24/etc/Makefile
+@@ -47,7 +47,8 @@
+ # {{{ User level target--  config 
+ config:
+ 	@rm -f    emacspeak.sh
+-	@sed "s@<emacspeak-dir>@$(SRC)/lisp@g" \
++	@sed -e "s@<emacspeak-dir>@/usr/share/$(FLAVOR)/site-lisp/emacspeak/lisp@g" \
++		-e 's/exec emacs/exec $(FLAVOR)/' \
+ 		emacspeak.sh.def > emacspeak.sh
+ 	@chmod 755   emacspeak.sh
+ 	@chmod 755   *.pl
+--- emacspeak-24.orig/debian/README.Debian
++++ emacspeak-24/debian/README.Debian
+@@ -0,0 +1,87 @@
++emacspeak for DEBIAN
++----------------------
++
++Emacspeak is authored by T. V. Raman <raman@cs.cornell.edu>.  These
++are the primary changes made in building the Debian package: html and
++plain text versions of the documentation were added.  A configuration
++script (/usr/sbin/emacspeakconfig) and associated speech server
++descriptions (/usr/share/emacs/site-lisp/emacspeak/blurbs/*) were
++added.  Manual pages for emacspeak and the configuration script were
++added.  Minor changes are listed in changelog.Debian.
++
++The user is expected to start emacspeak with /usr/bin/emacspeak, which
++gets configuration parameters from /etc/emacspeak.conf and starts
++emacs with emacspeak support.
++
++Several "flavors" of emacs may be installed at the same time (emacs20,
++emacs21, xemacs21, etc.).  In accordance with the Debian emacs policy,
++emacspeak is byte-compiled separately for each supported flavor -
++currently only emacs21.  There is a separate script to start each
++flavor of emacs with emacspeak support - for example,
++/usr/bin/emacspeak.emacs21.  /usr/bin/emacspeak is actually a symlink
++managed by the "alternatives" mechanism.  That is, it points to
++/etc/alternatives/emacspeak, which points to one of several links like
++/usr/bin/emacspeak.emacs21.  (See the manpage for
++update-alternatives.)
++
++The alternatives for emacspeak inherit their priorities from the
++corresponding emacs packages.  So, as long as the emacs and emacspeak
++alternatives are in "automatic" mode, both "emacs" and "emacspeak"
++will start emacs21.  If someday an emacs22 package is installed, with
++priority higher than for emacs 21, then by default both "emacs" and
++"emacspeak" will start emacs22.
++
++The administrator can use update-alternatives to change which flavor
++is started by either /usr/bin/emacs or /usr/bin/emacspeak.  Or, of
++course, any user can use one of the flavor-specific links like
++/usr/bin/emacspeak.emacs21 to start whichever flavor he wants.
++
++Starting with version 11.0, the Emacspeak sources include a speech
++server written in C++ for the IBM ViaVoice speech synthesis software.
++However, it depends on the ViaVoice runtime kit which does not meet
++the Debian Free Software Guidelines.  (It is available only as object
++code, and only under a temporary license.)  Therefore, support for
++ViaVoice is not included in this Debian package.  If you would like to
++try it, you can find some information in
++/usr/share/docs/emacspeak/VIAVOICE.
++
++Starting with version 10.0, Dr. Raman has rewritten the documentation
++files.  Approximately 100 commands are described there, compared to
++over 800 in the documentation shipped with the previous release.
++Therefore, the user should pay particular attention to the section
++"Using Online Help".
++
++Many command-line applications can be run under emacs, and can
++therefore be made accessible with emacspeak.  Much of this is
++explained in the documentation entitled "Running Terminal Based
++Applications".  However, it is worth emphasizing this point: "For
++regular shell interaction just use M-x shell instead of using the
++terminal emulator."
++
++The example file "tables.html" was supplied by Dr. Raman in a separate
++email.  It may be found in /usr/doc/emacspeak/examples.  It includes a
++sample table with three columns (labeled "item", "date", and
++"amount"), and three rows.  For a discussion of the support for tables
++in emacspeak and w3, see NEWS (or NEWS.gz) in /usr/doc/emacspeak.
++
++The Emacspeak-HOWTO contains additional documentation.  The plain text
++form of this can be found in the Debian package doc-linux, and is
++installed as /usr/doc/HOWTO/Emacspeak-HOWTO.gz.  Other formats are
++also available.  For example, these can be found at sunsite.unc.edu:
++
++  /pub/Linux/docs/HOWTO/other-formats/dvi/Emacspeak-HOWTO.dvi.gz
++  /pub/Linux/docs/HOWTO/other-formats/html/Emacspeak-HOWTO-html.tar.gz
++  /pub/Linux/docs/HOWTO/other-formats/ps/Emacspeak-HOWTO.ps.gz
++  /pub/Linux/docs/HOWTO/other-formats/sgml/Emacspeak-HOWTO.sgml.gz
++
++There is also an Emacspeak mailing list.  To subscribe, send a message
++to:
++
++        emacspeak-request@cs.vassar.edu
++
++with a subject of:
++
++        subscribe
++
++James R. Van Zandt <jrv@debian.org>, Mon Jan 30 21:36:59 EST 2006
++
+--- emacspeak-24.orig/debian/DOC
++++ emacspeak-24/debian/DOC
+@@ -0,0 +1,3373 @@
++DOC --- Automatically generated by command emacspeak-generate-documentation
++$Id$
++------------------------------------------------------------
++
++** dtk-add-cleanup-pattern	Key Sequence: control e d a 
++
++Add this pattern to the list of repeating patterns that
++are cleaned up.  Optional interactive prefix arg deletes
++this pattern if previously added.  Cleaning up repeated
++patterns results in emacspeak speaking the pattern followed
++by a repeat count instead of speaking all the characters
++making up the pattern.  Thus, by adding the repeating
++pattern `.' (this is already added by default) emacspeak
++will say ``aw fifteen dot'' when speaking the string
++``...............'' instead of ``period period period period
++''
++
++------------------------------------------------------------
++
++** dtk-notes-shutdown
++
++Shutdown midi system.
++
++------------------------------------------------------------
++
++** dtk-pause	Key Sequence: control e p 
++
++Pause ongoing speech.
++The speech can be resumed with command `dtk-resume'
++normally bound to C-e SPC.  Pausing speech is useful when one needs to
++perform a few actions before continuing to read a large document.  Emacspeak
++gives you speech feedback as usual once speech has been paused.  `dtk-resume'
++continues the interrupted speech irrespective of the buffer
++in which it is executed.
++Optional PREFIX arg flushes any previously paused speech.
++
++------------------------------------------------------------
++
++** dtk-reset-state	Key Sequence: control e d  cap R  
++
++Restore sanity to the Dectalk.
++Typically used after the Dectalk has been power   cycled.
++
++------------------------------------------------------------
++
++** dtk-resume	Key Sequence: control e SPACE 
++
++Resume paused speech.
++This command resumes  speech that has been suspended by executing
++command `dtk-pause' bound to C-e p.
++If speech has not been paused,
++and variable `dtk-resume-should-toggle' is t
++ then this command will pause ongoing speech.
++
++------------------------------------------------------------
++
++** dtk-select-server	Key Sequence: control e d d 
++
++Select a speech server interactively.
++Argument PROGRAM specifies the speech server program.
++When called  interactively, The selected server is started immediately. 
++
++------------------------------------------------------------
++
++** dtk-set-character-scale	Key Sequence: control e d f 
++
++Set scale FACTOR for   speech rate.
++Speech rate is scaled by this factor
++when speaking characters.
++Interactive PREFIX arg means set   the global default value, and then set the
++current local  value to the result.
++
++------------------------------------------------------------
++
++** dtk-set-chunk-separator-syntax	Key Sequence: control e d RETURN 
++
++Interactively set how text is split in chunks.
++See the Emacs documentation on syntax tables for details on how characters are
++classified into various syntactic classes.
++Argument S specifies the syntax class.
++
++------------------------------------------------------------
++
++** dtk-set-predefined-speech-rate	Key Sequence: control e d 9   control e d 8   control e d 7   control e d 6   control e d 5   control e d 4   control e d 3   control e d 2   control e d 1   control e d 0 
++
++Set speech rate to one of nine predefined levels.
++Interactive PREFIX arg says to set the rate globally.
++Formula used is:
++rate = dtk-speech-rate-base + dtk-speech-rate-step * level.
++
++------------------------------------------------------------
++
++** dtk-set-punctuations	Key Sequence: control e d p 
++
++Set punctuation mode to MODE.
++Possible values are `some', `all', or `none'.
++Interactive PREFIX arg means set   the global default value, and then set the
++current local  value to the result.
++
++------------------------------------------------------------
++
++** dtk-set-punctuations-to-all
++
++Set punctuation  mode to all.
++Interactive PREFIX arg sets punctuation mode globally.
++
++------------------------------------------------------------
++
++** dtk-set-punctuations-to-some
++
++Set punctuation  mode to some.
++Interactive PREFIX arg sets punctuation mode globally.
++
++------------------------------------------------------------
++
++** dtk-set-rate	Key Sequence: control e d r 
++
++Set speaking RATE for the tts.
++Interactive PREFIX arg means set   the global default value, and then set the
++current local  value to the result.
++
++------------------------------------------------------------
++
++** dtk-stop	Key Sequence: <pause>   control e s 
++
++Stop speech now.
++
++------------------------------------------------------------
++
++** dtk-toggle-allcaps-beep	Key Sequence: control e d  cap C  
++
++Toggle allcaps-beep.
++when set, allcaps words  are  indicated by a
++short beep.  Interactive PREFIX arg means toggle the global default
++value, and then set the current local value to the result.
++Note that allcaps-beep is a very useful thing when programming.
++However it is irritating to have it on when reading documents.
++
++------------------------------------------------------------
++
++** dtk-toggle-capitalization	Key Sequence: control e d c 
++
++Toggle capitalization.
++when set, capitalization is indicated by a
++short beep.  Interactive PREFIX arg means toggle the global default
++value, and then set the current local value to the result.
++
++------------------------------------------------------------
++
++** dtk-toggle-debug	Key Sequence: control e d b 
++
++Toggle state of the debug FLAG.
++When debugging is on, you can switch to the buffer
++*speaker* to examine the output from the process
++that talks to the speech device by using command C-e d C-M-b.
++Note: *speaker* is a hidden buffer, ie it has a leading space in its name.
++
++------------------------------------------------------------
++
++** dtk-toggle-punctuation-mode
++
++Toggle punctuation mode between "some" and "all".
++Interactive PREFIX arg makes the new setting global.
++
++------------------------------------------------------------
++
++** dtk-toggle-quiet	Key Sequence: control e d q 
++
++Toggles state of  dtk-quiet.
++Turning on this switch silences speech.
++Optional interactive prefix arg causes this setting to become global.
++
++------------------------------------------------------------
++
++** dtk-toggle-speak-nonprinting-chars	Key Sequence: control e d n 
++
++Toggle speak-nonprinting-chars.
++Switches behavior of how characters with the high bit set are handled.
++Interactive PREFIX arg means toggle the global default
++value, and then set the current local value to the result.
++
++------------------------------------------------------------
++
++** dtk-toggle-split-caps	Key Sequence: control e d s 
++
++Toggle split caps mode.
++Split caps mode is useful when reading
++Hungarian notation in program source code.  Interactive PREFIX arg
++means toggle the global default value, and then set the current local
++value to the result.
++
++------------------------------------------------------------
++
++** dtk-toggle-splitting-on-white-space	Key Sequence: control e d SPACE 
++
++Toggle splitting of speech on white space.
++This affects the internal state of emacspeak that decides if we split
++text purely by clause boundaries, or also include
++whitespace.  By default, emacspeak sends a clause at a time
++to the speech device.  This produces fluent speech for
++normal use.  However in modes such as `shell-mode' and some
++programming language modes, clause markers appear
++infrequently, and this can result in large amounts of text
++being sent to the speech device at once, making the system
++unresponsive when asked to stop talking.  Splitting on white
++space makes emacspeak's stop command responsive.  However,
++when splitting on white space, the speech sounds choppy
++since the synthesizer is getting a word at a time.
++
++------------------------------------------------------------
++
++** dtk-toggle-stop-immediately-while-typing	Key Sequence: control e d  cap I  
++
++Toggle state of variable `dtk-stop-immediately-while-typing'.
++As the name implies, if T then speech flushes immediately as you
++type.  Optional argument PREFIX specifies if the setting applies
++to all buffers.
++
++------------------------------------------------------------
++
++** emacspeak-describe-emacspeak	Key Sequence: control h control e 
++
++Give a brief overview of emacspeak.
++
++------------------------------------------------------------
++
++** emacspeak-submit-bug	Key Sequence: control e CONTROL meta b 
++
++Function to submit a bug to the programs maintainer.
++
++------------------------------------------------------------
++
++** emacspeak-aumix	Key Sequence: control e ( 
++
++Setup output parameters of the auditory display.
++ Launch this tool while you have auditory output on
++multiple channels playing so you can
++adjust the settings to your preference.  Hit q to quit when
++you are done.
++
++------------------------------------------------------------
++
++** emacspeak-aumix-edit
++
++Edit aumix settings interactively. 
++Run command M-x emacspeak-aumix-reset
++after saving the settings to have them take effect.
++
++------------------------------------------------------------
++
++** emacspeak-aumix-reset
++
++Reset to default audio settings.
++
++------------------------------------------------------------
++
++** emacspeak-aumix-volume-decrease
++
++Decrease overall volume. 
++
++------------------------------------------------------------
++
++** emacspeak-aumix-volume-increase
++
++Increase overall volume. 
++
++------------------------------------------------------------
++
++** emacspeak-aumix-wave-decrease
++
++Decrease volume of wave output. 
++
++------------------------------------------------------------
++
++** emacspeak-aumix-wave-increase
++
++Increase volume of wave output. 
++
++------------------------------------------------------------
++
++** emacspeak-list-buffers-next-line
++
++Speech enabled buffer menu navigation
++
++------------------------------------------------------------
++
++** emacspeak-list-buffers-previous-line
++
++Speech enabled buffer menu navigation
++
++------------------------------------------------------------
++
++** emacspeak-list-buffers-speak-buffer-line
++
++Speak information about this buffer
++
++------------------------------------------------------------
++
++** emacspeak-list-buffers-speak-buffer-name
++
++Speak the name of the buffer on this line
++
++------------------------------------------------------------
++
++** emacspeak-compilation-speak-error
++
++Speech feedback about the compilation error. 
++
++------------------------------------------------------------
++
++** emacspeak-custom-goto-group
++
++Jump to custom group when in a customization buffer.
++
++------------------------------------------------------------
++
++** emacspeak-custom-goto-toolbar
++
++Jump to custom toolbar when in a customization buffer.
++
++------------------------------------------------------------
++
++** emacspeak-dired-label-fields
++
++Labels the fields of the listing in the dired buffer.
++Currently is a no-op  unless
++unless `dired-listing-switches' contains -al
++
++------------------------------------------------------------
++
++** emacspeak-dired-show-file-type
++
++Displays type of current file by running command file.
++Like Emacs' built-in dired-show-file-type but allows user to customize
++options passed to command `file'.
++
++------------------------------------------------------------
++
++** emacspeak-dired-speak-file-access-time
++
++Speak access time  of the current file.
++
++------------------------------------------------------------
++
++** emacspeak-dired-speak-file-modification-time
++
++Speak modification time  of the current file.
++
++------------------------------------------------------------
++
++** emacspeak-dired-speak-file-permissions
++
++Speak the permissions of the current file.
++
++------------------------------------------------------------
++
++** emacspeak-dired-speak-file-size
++
++Speak the size of the current file.
++On a directory line, run du -s on the directory to speak its size.
++
++------------------------------------------------------------
++
++** emacspeak-dired-speak-header-line
++
++Speak the header line of the dired buffer. 
++
++------------------------------------------------------------
++
++** emacspeak-dired-speak-symlink-target
++
++Speaks the target of the symlink on the current line.
++
++------------------------------------------------------------
++
++** emacspeak-eterm-copy-region-to-register
++
++Copy text from terminal to an Emacs REGISTER.
++This copies  region delimited by the emacspeak eterm marker 
++set by command M-x emacspeak-eterm-set-marker and the 
++emacspeak eterm pointer to a register.
++
++------------------------------------------------------------
++
++** emacspeak-eterm-define-window
++
++Prompt for a window ID.
++The window is then define to be
++the rectangle delimited by point and eterm mark.  This is to
++be used when emacspeak is set to review mode inside an
++eterm.
++
++------------------------------------------------------------
++
++** emacspeak-eterm-describe-window
++
++Describe an eterm  window.
++Description indicates eterm window coordinates and whether it is stretchable
++
++------------------------------------------------------------
++
++** emacspeak-eterm-goto-line
++
++Move emacspeak eterm pointer to a specified LINE.
++
++------------------------------------------------------------
++
++** emacspeak-eterm-kill-ring-save-region
++
++Copy text from terminal to kill ring.
++This copies  region delimited by the emacspeak eterm marker 
++set by command M-x emacspeak-eterm-set-marker and the 
++emacspeak eterm pointer.
++
++------------------------------------------------------------
++
++** emacspeak-eterm-maybe-send-raw
++
++Send a raw character through if in the terminal buffer.
++Execute end of line if
++in a non eterm buffer if executed via C-e C-e
++
++------------------------------------------------------------
++
++** emacspeak-eterm-paste-register
++
++Paste contents of REGISTER at current location.
++If the specified register contains text, then that text is
++sent to the terminal as if it were typed by the user.
++
++------------------------------------------------------------
++
++** emacspeak-eterm-pointer-backward-word
++
++Move the pointer backward  by words. 
++Interactive numeric prefix arg specifies number of words to move.
++Argument COUNT specifies number of words by which to move.
++
++------------------------------------------------------------
++
++** emacspeak-eterm-pointer-down
++
++Move the pointer down a line.
++Argument COUNT specifies number of lines by which to move.
++
++------------------------------------------------------------
++
++** emacspeak-eterm-pointer-forward-word
++
++Move the pointer forward by words. 
++Interactive numeric prefix arg specifies number of words to move.
++Argument COUNT specifies number of words by which to move.
++
++------------------------------------------------------------
++
++** emacspeak-eterm-pointer-left
++
++Move the pointer left.
++Argument COUNT specifies number of columns by which to move.
++
++------------------------------------------------------------
++
++** emacspeak-eterm-pointer-right
++
++Move the pointer right.
++Argument COUNT specifies number of columns by which to move.
++
++------------------------------------------------------------
++
++** emacspeak-eterm-pointer-to-bottom
++
++Move the pointer to the bottom  of the screen.
++
++------------------------------------------------------------
++
++** emacspeak-eterm-pointer-to-cursor
++
++Move the pointer to the cursor.
++
++------------------------------------------------------------
++
++** emacspeak-eterm-pointer-to-left-edge
++
++Move the pointer to the right edge.
++
++------------------------------------------------------------
++
++** emacspeak-eterm-pointer-to-next-color-change
++
++Move the eterm pointer to the next color change.
++This allows you to move between highlighted regions of the screen.
++Optional argument COUNT specifies how many changes to skip.
++
++------------------------------------------------------------
++
++** emacspeak-eterm-pointer-to-previous-color-change
++
++Move the eterm pointer to the next color change.
++This allows you to move between highlighted regions of the screen.
++Optional argument COUNT specifies how many changes to skip.
++
++------------------------------------------------------------
++
++** emacspeak-eterm-pointer-to-right-edge
++
++Move the pointer to the right edge.
++
++------------------------------------------------------------
++
++** emacspeak-eterm-pointer-to-top
++
++Move the pointer to the top of the screen.
++
++------------------------------------------------------------
++
++** emacspeak-eterm-pointer-up
++
++Move the pointer up a line.
++Argument COUNT .specifies number of lines by which to move.
++
++------------------------------------------------------------
++
++** emacspeak-eterm-remote-term	Key Sequence: control e CONTROL meta r 
++
++Start a terminal-emulator in a new buffer.
++
++------------------------------------------------------------
++
++** emacspeak-eterm-search-backward
++
++Search backward on the terminal.
++
++------------------------------------------------------------
++
++** emacspeak-eterm-search-forward
++
++Search forward on the terminal.
++
++------------------------------------------------------------
++
++** emacspeak-eterm-set-filter-window
++
++Prompt for the id of a predefined window,
++and set the `filter' window to it.
++Non-nil interactive prefix arg `unsets' the filter window;
++this is equivalent to having the entire terminal as the filter window (this is
++what eterm starts up with).
++Setting the filter window results in emacspeak  only monitoring screen
++activity within the filter window.
++
++------------------------------------------------------------
++
++** emacspeak-eterm-set-focus-window
++
++Prompt for the id of a predefined window,
++and set the `focus' window to it.
++Non-nil interactive prefix arg `unsets' the focus window;
++this is equivalent to having the entire terminal as the focus window (this is
++what eterm starts up with).
++Setting the focus window results in emacspeak  monitoring screen
++and speaking that window upon seeing screen activity.
++
++------------------------------------------------------------
++
++** emacspeak-eterm-set-marker
++
++Set Emacspeak eterm marker.
++This sets  the emacspeak eterm marker to the position pointed 
++to by the emacspeak eterm pointer.
++
++------------------------------------------------------------
++
++** emacspeak-eterm-speak-cursor
++
++Speak cursor position.
++
++------------------------------------------------------------
++
++** emacspeak-eterm-speak-pointer
++
++Speak current pointer position.
++
++------------------------------------------------------------
++
++** emacspeak-eterm-speak-pointer-char
++
++Speak char under eterm pointer.
++Pronounces character phonetically unless  called with a PREFIX arg.
++
++------------------------------------------------------------
++
++** emacspeak-eterm-speak-pointer-line
++
++Speak the line the pointer is on.
++
++------------------------------------------------------------
++
++** emacspeak-eterm-speak-pointer-word
++
++Speak the word  the pointer is on.
++
++------------------------------------------------------------
++
++** emacspeak-eterm-speak-predefined-window
++
++Speak a predefined eterm window between 1 and 10.
++
++------------------------------------------------------------
++
++** emacspeak-eterm-speak-screen
++
++Speak the screen.  Default is to speak from the emacspeak pointer  to point.
++Optional prefix arg FLAG causes region above
++the Emacspeak pointer to be spoken.
++
++------------------------------------------------------------
++
++** emacspeak-eterm-speak-window
++
++Speak an eterm window.
++Argument ID specifies the window.
++
++------------------------------------------------------------
++
++** emacspeak-eterm-toggle-filter-window
++
++Toggle active state of filter window.
++
++------------------------------------------------------------
++
++** emacspeak-eterm-toggle-focus-window
++
++Toggle active state of focus window.
++
++------------------------------------------------------------
++
++** emacspeak-eterm-toggle-pointer-mode
++
++Toggle emacspeak eterm pointer mode.
++With optional interactive prefix  arg, turn it on.
++When emacspeak eterm is in pointer mode, the eterm read pointer
++stays where it is rather than automatically moving to the terminal cursor when
++there is terminal activity.
++
++------------------------------------------------------------
++
++** emacspeak-eterm-toggle-review
++
++Toggle state of eterm review. 
++In review mode, you can move around the terminal and listen to the contnets 
++without sending input to the terminal itself.
++
++------------------------------------------------------------
++
++** emacspeak-eterm-yank-window
++
++Yank contents of  an eterm window at point.
++
++------------------------------------------------------------
++
++** emacspeak-toggle-eterm-autospeak
++
++Toggle state of eterm autospeak.
++When eterm autospeak is turned on and the terminal is in line mode,
++all output to the terminal is automatically spoken. 
++  Interactive prefix arg means toggle  the global default value, and then set the
++  current local  value to the result. 
++
++------------------------------------------------------------
++
++** emacspeak-fix-all-recent-commands
++
++Fix recently loaded interactive commands.
++This command looks through `load-history' and fixes commands if necessary.
++Memoizes call in emacspeak-load-history-pointer to memoize this call. 
++
++------------------------------------------------------------
++
++** emacspeak-fix-commands-loaded-from
++
++Fix all commands loaded from a specified module.
++
++------------------------------------------------------------
++
++** emacspeak-forms-find-file
++
++Visit a forms file
++
++------------------------------------------------------------
++
++** emacspeak-forms-flush-unwanted-records
++
++Prompt for pattern and flush matching lines
++
++------------------------------------------------------------
++
++** emacspeak-forms-rerun-filter
++
++Rerun  filter --allows us to nuke more matching records
++
++------------------------------------------------------------
++
++** emacspeak-forms-speak-field
++
++Speak current form field name and value.
++Assumes that point is at the front of a field value.
++
++------------------------------------------------------------
++
++** emacspeak-forms-summarize-current-position
++
++Summarize current position in list of records
++
++------------------------------------------------------------
++
++** emacspeak-forms-summarize-current-record
++
++Summarize current record
++
++------------------------------------------------------------
++
++** emacspeak-keymap-choose-new-emacspeak-prefix
++
++Interactively select a new prefix key to use for all emacspeak
++commands.  The default is to use `C-e'  This command
++lets you switch the prefix to something else.  This is a useful thing
++to do if you run emacspeak on a remote machine from inside a terminal
++that is running inside a local emacspeak session.  You can have the
++remote emacspeak use a different control key to give your fingers some
++relief.
++
++------------------------------------------------------------
++
++** emacspeak-toggle-comint-output-monitor	Key Sequence: control e o 
++
++Toggle state of Emacspeak comint monitor.
++When turned on, comint output is automatically spoken.  Turn this on if
++you want your shell to speak its results.  Interactive
++PREFIX arg means toggle the global default value, and then
++set the current local value to the result.
++
++------------------------------------------------------------
++
++** emacspeak-pronounce-clear-dictionaries
++
++Clear all current pronunciation dictionaries.
++
++------------------------------------------------------------
++
++** emacspeak-pronounce-define-local-pronunciation
++
++Define buffer local pronunciation.
++Argument WORD specifies the word which should be pronounced as specified by PRONUNCIATION.
++
++------------------------------------------------------------
++
++** emacspeak-pronounce-define-pronunciation
++
++Interactively define entries in the pronunciation dictionaries.
++Default term to define is delimited by region.
++First loads any persistent dictionaries if not already loaded.
++
++------------------------------------------------------------
++
++** emacspeak-pronounce-define-template-pronunciation
++
++Interactively define template entries in the pronunciation dictionaries.
++Default term to define is delimited by region.
++First loads any persistent dictionaries if not already loaded.
++
++------------------------------------------------------------
++
++** emacspeak-pronounce-dispatch	Key Sequence: control e meta d 
++
++Provides the user interface front-end to Emacspeak's pronunciation dictionaries.
++
++------------------------------------------------------------
++
++** emacspeak-pronounce-edit-pronunciations
++
++Prompt for and launch a pronunciation editor on the
++specified pronunciation dictionary key.
++
++------------------------------------------------------------
++
++** emacspeak-pronounce-load-dictionaries
++
++Load pronunciation dictionaries.
++Optional argument FILENAME specifies the dictionary file.
++
++------------------------------------------------------------
++
++** emacspeak-pronounce-refresh-pronunciations
++
++Refresh pronunciation table for current buffer.
++Activates pronunciation dictionaries if not already active.
++
++------------------------------------------------------------
++
++** emacspeak-pronounce-save-dictionaries
++
++Writes out the persistent emacspeak pronunciation dictionaries.
++
++------------------------------------------------------------
++
++** emacspeak-pronounce-toggle-use-of-dictionaries
++
++Toggle use of pronunciation dictionaries in current buffer.
++Pronunciations can be defined on a per file, per directory and/or per
++mode basis.
++Pronunciations are activated on a per buffer basis.
++Turning on the use of pronunciation dictionaries results in emacspeak
++composing a pronunciation table based on the currently defined
++pronunciation dictionaries.
++After this, the pronunciations will be applied whenever text in the
++buffer is spoken.
++Optional argument state can be used from Lisp programs to
++explicitly turn pronunciations on or off.
++
++------------------------------------------------------------
++
++** emacspeak-pronounce-yank-word
++
++Yank word at point into minibuffer.
++
++------------------------------------------------------------
++
++** emacspeak-backward-char	Key Sequence: control b   <left> 
++
++Backward-char redefined to speak char moved to. 
++
++------------------------------------------------------------
++
++** emacspeak-forward-char	Key Sequence: control f   <right> 
++
++Forward-char redefined to speak char moved to. 
++
++------------------------------------------------------------
++
++** emacspeak-self-insert-command	Key Sequence: Character set JISX0213-2   Character set Tibetan 2 column   Character set Indian 2 Column   Character set CNS11643-7 (Chinese traditional): ISO-IR-187   Character set CNS11643-6 (Chinese traditional): ISO-IR-186   Character set CNS11643-5 (Chinese traditional): ISO-IR-185   Character set CNS11643-4 (Chinese traditional): ISO-IR-184   Character set CNS11643-3 (Chinese traditional): ISO-IR-183   Character set Ethiopic characters   Character set Unicode subset ( cap U +0100.. cap U +24FF)   Character set Unicode subset ( cap U +E000+FFFF)   Character set Unicode subset ( cap U +2500.. cap U +33FF)   Character set Tibetan 1 column   Character set Indian 1 Column   Character set Indian IS 13194   Character set Arabic 2-column   Character set Lao   Character set ASCII with right-to-left direction   Character set Arabic 1-column   Character set Arabic digit   Character set VISCII upper-case   Character set VISCII lower-case   Character set IPA   Character set SiSheng (PinYin/ZhuYin)   Character set Big5 (Level-2) C940-FEFE   Character set Big5 (Level-1) A141-C67F   Character set JISX0213-1   Character set CNS11643-2 (Chinese traditional): ISO-IR-172   Character set CNS11643-1 (Chinese traditional): ISO-IR-171   Character set JISX0212 (Japanese): ISO-IR-159   Character set KSC5601 (Korean): ISO-IR-149   Character set JISX0208.1983/1990 (Japanese): ISO-IR-87   Character set GB2312: ISO-IR-58   Character set JISX0208.1978 (Japanese): ISO-IR-42   Character set RHP of Latin-8 (ISO 8859-14)   Character set RHP of Latin-9 (ISO 8859-15): ISO-IR-203   Character set RHP of Latin-5 (ISO 8859-9): ISO-IR-148   Character set RHP of Cyrillic (ISO 8859-5): ISO-IR-144   Character set Japanese Roman (JISX0201.1976)   Character set Japanese Katakana (JISX0201.1976)   Character set RHP of Hebrew (ISO 8859-8): ISO-IR-138   Character set RHP of Arabic (ISO 8859-6): ISO-IR-127   Character set RHP of Greek (ISO 8859-7): ISO-IR-126   Character set RHP of Thai (TIS620): ISO-IR-166   Character set RHP of Latin-4 (ISO 8859-4): ISO-IR-110   Character set RHP of Latin-3 (ISO 8859-3): ISO-IR-109   Character set RHP of Latin-2 (ISO 8859-2): ISO-IR-101   Character set RHP of Latin-1 (ISO 8859-1): ISO-IR-100   ÿ   þ   ý   ü   û   ú   ù   ø   ÷   ö   õ   ô   ó   ò   ñ   ð   ï   î   í   ì   ë   ê   é   è   ç   æ   å   ä   ã   â   á   à   ß   Þ   Ý   Ü   Û   Ú   Ù   Ø   ×   Ö   Õ   Ô   Ó   Ò   Ñ   Ð   Ï   Î   Í   Ì   Ë   Ê   É   È   Ç   Æ   Å   Ä   Ã   Â   Á   À   ¿   ¾   ½   ¼   »   º   ¹   ¸   ·   ¶   µ   ´   ³   ²   ±   °   ¯   ®   ­   ¬   «   ª   ©   ¨   §   ¦   ¥   ¤   £   ¢   ¡       ~   }   |   {   z   y   x   w   v   u   t   s   r   q   p   o   n   m   l   k   j   i   h   g   f   e   d   c   b   a   `   _   ^   ]   \   [    cap Z     cap Y     cap X     cap W     cap V     cap U     cap T     cap S     cap R     cap Q     cap P     cap O     cap N     cap M     cap L     cap K     cap J     cap I     cap H     cap G     cap F     cap E     cap D     cap C     cap B     cap A    @   ?   >   =   <   ;   :   9   8   7   6   5   4   3   2   1   0   /   .   -   ,   +   *   )   (   '   &   %   $   #   "   !   SPACE 
++
++Insert a character.
++Speaks the character if emacspeak-character-echo is true.
++See  command emacspeak-toggle-word-echo bound to
++C-e d w.
++Toggle variable dtk-stop-immediately-while-typing if you want to have
++speech flush as you type.
++
++------------------------------------------------------------
++
++** emacspeak-rmail-speak-current-message-labels
++
++Speak labels of current message
++
++------------------------------------------------------------
++
++** emacspeak-rmail-summarize-current-message
++
++Summarize current message
++
++------------------------------------------------------------
++
++** emacspeak-play-all-icons
++
++Plays all defined icons and speaks their names.
++
++------------------------------------------------------------
++
++** emacspeak-set-auditory-icon-player	Key Sequence: control e meta a 
++
++Select  player used for producing auditory icons.
++Recommended choices:
++
++emacspeak-serve-auditory-icon for  the wave device.
++emacspeak-queue-auditory-icon when using software TTS.
++emacspeak-play-midi-icon for midi device. 
++
++------------------------------------------------------------
++
++** emacspeak-sounds-reset-local-player
++
++Ask Emacspeak to use a local audio player.
++This lets me have Emacspeak switch to using audioplay on
++solaris after I've used it for a while from a remote session
++where it would use the more primitive speech-server based
++audio player.
++
++------------------------------------------------------------
++
++** emacspeak-sounds-reset-sound
++
++Reload sound drivers.
++
++------------------------------------------------------------
++
++** emacspeak-sounds-select-theme	Key Sequence: control e ) 
++
++Select theme for auditory icons.
++
++------------------------------------------------------------
++
++** emacspeak-toggle-auditory-icons	Key Sequence: control e control a 
++
++Toggle use of auditory icons.
++Optional interactive PREFIX arg toggles global value.
++
++------------------------------------------------------------
++
++** emacspeak-audio-annotate-paragraphs
++
++Set property auditory-icon at front of all paragraphs.
++
++------------------------------------------------------------
++
++** emacspeak-blink-matching-open
++
++Display matching delimiter in the minibuffer.
++
++------------------------------------------------------------
++
++** emacspeak-completions-move-to-completion-group
++
++Move to group of choices beginning with character last
++typed. If no such group exists, then we dont move. 
++
++------------------------------------------------------------
++
++** emacspeak-dial-dtk	Key Sequence: control e d t 
++
++Prompt for and dial a phone NUMBER with the Dectalk.
++
++------------------------------------------------------------
++
++** emacspeak-execute-repeatedly
++
++Execute COMMAND repeatedly.
++
++------------------------------------------------------------
++
++** emacspeak-mark-backward-mark	Key Sequence: <control up> 
++
++Cycle backward through the mark ring.
++
++------------------------------------------------------------
++
++** emacspeak-mark-forward-mark	Key Sequence: <control down> 
++
++Cycle forward through the mark ring.
++
++------------------------------------------------------------
++
++** emacspeak-owindow-next-line	Key Sequence: ESCAPE <down> 
++
++Move to the next line in the other window and speak it.
++Numeric prefix arg COUNT can specify number of lines to move.
++
++------------------------------------------------------------
++
++** emacspeak-owindow-previous-line	Key Sequence: ESCAPE <up> 
++
++Move to the next line in the other window and speak it.
++Numeric prefix arg COUNT specifies number of lines to move.
++
++------------------------------------------------------------
++
++** emacspeak-owindow-scroll-down	Key Sequence: ESCAPE <prior> 
++
++Scroll down  the window that command `other-window' would move to.
++Speak the window contents after scrolling.
++
++------------------------------------------------------------
++
++** emacspeak-owindow-scroll-up	Key Sequence: ESCAPE <next> 
++
++Scroll up the window that command `other-window' would move to.
++Speak the window contents after scrolling.
++
++------------------------------------------------------------
++
++** emacspeak-owindow-speak-line	Key Sequence: ESCAPE <select> 
++
++Speak the current line in the other window.
++
++------------------------------------------------------------
++
++** emacspeak-read-next-line	Key Sequence: control e <down> 
++
++Read next line, specified by an offset, without moving.
++Default is to read the next line. 
++
++------------------------------------------------------------
++
++** emacspeak-read-next-word
++
++Read next word, specified as a numeric  arg, without moving.
++Default is to read the next word. 
++
++------------------------------------------------------------
++
++** emacspeak-read-previous-line	Key Sequence: control e <up> 
++
++Read previous line, specified by an offset, without moving.
++Default is to read the previous line. 
++
++------------------------------------------------------------
++
++** emacspeak-read-previous-word
++
++Read previous word, specified as a prefix arg, without moving.
++Default is to read the previous word. 
++
++------------------------------------------------------------
++
++** emacspeak-speak-and-skip-extent-upto-char
++
++Search forward from point until we hit char.
++Speak text between point and the char we hit.
++
++------------------------------------------------------------
++
++** emacspeak-speak-and-skip-extent-upto-this-char
++
++Speak extent delimited by point and last character typed.
++
++------------------------------------------------------------
++
++** emacspeak-speak-browse-buffer	Key Sequence: control e , 
++
++Browse current buffer.
++Default is to speak chunk having current personality.
++Interactive prefix arg `browse'  repeatedly browses  through
++  chunks having same personality as the current text chunk.
++
++------------------------------------------------------------
++
++** emacspeak-speak-buffer	Key Sequence: control e b 
++
++Speak current buffer  contents.
++With prefix ARG, speaks the rest of the buffer from point.
++Negative prefix arg speaks from start of buffer to point.
++ If voice lock mode is on, the paragraphs in the buffer are
++voice annotated first,  see command `emacspeak-speak-voice-annotate-paragraphs'.
++
++------------------------------------------------------------
++
++** emacspeak-speak-buffer-filename	Key Sequence: control e f 
++
++Speak name of file being visited in current buffer.
++Speak default directory if invoked in a dired buffer,
++or when the buffer is not visiting any file. 
++Interactive prefix arg `filename' speaks only the final path
++component.
++The result is put in the kill ring for convenience.
++
++------------------------------------------------------------
++
++** emacspeak-speak-buffer-interactively	Key Sequence: control e  cap B  
++
++Speak the start of, rest of, or the entire buffer.
++'s' to speak the start.
++'r' to speak the rest.
++any other key to speak entire buffer.
++
++------------------------------------------------------------
++
++** emacspeak-speak-char	Key Sequence: control e c 
++
++Speak character under point.
++Pronounces character phonetically unless  called with a PREFIX arg.
++
++------------------------------------------------------------
++
++** emacspeak-speak-comint-send-input
++
++Causes output to be spoken i.e., as if comint autospeak were turned
++on.
++
++------------------------------------------------------------
++
++** emacspeak-speak-completions
++
++Speak completions  buffer if one present.
++
++------------------------------------------------------------
++
++** emacspeak-speak-continuously	Key Sequence: control e RETURN 
++
++Speak a buffer continuously.
++First prompts using the minibuffer for the kind of action to
++perform after speaking each chunk.  E.G.  speak a line at a time
++etc.  Speaking commences at current buffer position.  Pressing
++C-g breaks out, leaving point on last chunk that
++was spoken.  Any other key continues to speak the buffer.
++
++------------------------------------------------------------
++
++** emacspeak-speak-current-column	Key Sequence: control e = 
++
++Speak the current column.
++
++------------------------------------------------------------
++
++** emacspeak-speak-current-kill	Key Sequence: control e k 
++
++Speak the current kill entry.
++This is the text that will be yanked in by the next C-y.
++Prefix numeric arg, COUNT, specifies that the text that will be yanked as a
++result of a
++C-y  followed by count-1 M-y
++be spoken.
++ The kill number that is spoken says what numeric prefix arg to give
++to command yank.
++
++------------------------------------------------------------
++
++** emacspeak-speak-current-mark	Key Sequence: control e control @ 
++
++Speak the line containing the mark.
++With no argument, speaks the
++line containing the mark--this is where `exchange-point-and-mark'
++C-x C-x would jump.  Numeric prefix arg 'COUNT' speaks
++line containing mark 'n' where 'n' is one less than the number of
++times one has to jump using `set-mark-command' to get to this marked
++position.  The location of the mark is indicated by an aural highlight
++achieved by a change in voice personality.
++
++------------------------------------------------------------
++
++** emacspeak-speak-current-percentage	Key Sequence: control e % 
++
++Announce the percentage into the current buffer.
++
++------------------------------------------------------------
++
++** emacspeak-speak-current-window
++
++Speak contents of current window.
++Speaks entire window irrespective of point.
++
++------------------------------------------------------------
++
++** emacspeak-speak-display-char
++
++Display char under point using current speech display table.
++Behavior is the same as command `emacspeak-speak-char'
++bound to C-e c
++for characters in the range 0--127.
++Optional argument PREFIX  specifies that the character should be spoken phonetically.
++
++------------------------------------------------------------
++
++** emacspeak-speak-front-of-buffer
++
++Speak   the buffer from start to   point
++
++------------------------------------------------------------
++
++** emacspeak-speak-help	Key Sequence: control e h 
++
++Speak help buffer if one present.
++With prefix arg, speaks the rest of the buffer from point.
++Negative prefix arg speaks from start of buffer to point.
++
++------------------------------------------------------------
++
++** emacspeak-speak-help-interactively
++
++Speak the start of, rest of, or the entire help.
++'s' to speak the start.
++'r' to speak the rest.
++any other key to speak entire help.
++
++------------------------------------------------------------
++
++** emacspeak-speak-line	Key Sequence: control e l 
++
++Speaks current line.  With prefix ARG, speaks the rest of the line
++from point.  Negative prefix optional arg speaks from start of line to
++point.  Voicifies if option `voice-lock-mode' is on.  Indicates
++indentation with a tone if audio indentation is in use.  Indicates
++position of point with an aural highlight if option
++`emacspeak-show-point' is turned on --see command
++`emacspeak-show-point' bound to M-x emacspeak-show-point.  Lines that
++start hidden blocks of text, e.g.  outline header lines, or header
++lines of blocks created by command `emacspeak-hide-or-expose-block'
++are indicated with auditory icon ellipses.
++
++------------------------------------------------------------
++
++** emacspeak-speak-line-interactively	Key Sequence: control e  cap L  
++
++Speak the start of, rest of, or the entire line.
++'s' to speak the start.
++'r' to speak the rest.
++any other key to speak entire line.
++
++------------------------------------------------------------
++
++** emacspeak-speak-line-number	Key Sequence: control e control l 
++
++Print the current buffer line number and narrowed line number of point.
++
++------------------------------------------------------------
++
++** emacspeak-speak-line-number-obsolete
++
++Speak the line number of the current line.
++
++------------------------------------------------------------
++
++** emacspeak-speak-line-set-column-filter	Key Sequence: control e | 
++
++Set up filter for selectively speaking or ignoring portions of lines.
++The filter is specified as a list of pairs.
++For example, to filter  columns 1 -- 10 and 20 -- 25,
++specify filter as 
++((0 9) (20 25)). Filter settings are persisted across sessions.  A
++persisted filter is used as the default when prompting for a filter.
++This allows one to accumulate a set of filters for specific files like
++/var/adm/messages and /var/adm/maillog over time.
++Option emacspeak-speak-line-invert-filter determines 
++the sense of the filter. 
++
++------------------------------------------------------------
++
++** emacspeak-speak-load-directory-settings
++
++Load a directory specific Emacspeak settings file.
++This is typically used to load up settings that are specific to
++an electronic book consisting of many files in the same
++directory.
++
++------------------------------------------------------------
++
++** emacspeak-speak-message-again	Key Sequence: control e a 
++
++Speak the last message from Emacs once again.
++Optional interactive prefix arg 
++`from-message-cache' speaks message cached from the most
++recent call to function `message'.
++The message is also placed in the kill ring for convenient yanking
++if `emacspeak-speak-message-again-should-copy-to-kill-ring' is set.
++
++------------------------------------------------------------
++
++** emacspeak-speak-message-at-time	Key Sequence: control e @ 
++
++Set up ring-at-time to speak message at specified time.
++Provides simple stop watch functionality in addition to other things.
++See documentation for command run-at-time for details on time-spec.
++
++------------------------------------------------------------
++
++** emacspeak-speak-minibuffer
++
++Speak the minibuffer contents
++ With prefix arg, speaks the rest of the buffer from point.
++Negative prefix arg speaks from start of buffer to point.
++
++------------------------------------------------------------
++
++** emacspeak-speak-minor-mode-line	Key Sequence: control e  cap M  
++
++Speak the minor mode-information.
++
++------------------------------------------------------------
++
++** emacspeak-speak-mode-line	Key Sequence: control e m 
++
++Speak the mode-line.
++Interactive prefix arg speaks buffer info.
++
++------------------------------------------------------------
++
++** emacspeak-speak-next-field	Key Sequence: control e > 
++
++Skip across and speak the next contiguous sequence of non-blank characters.
++Useful in moving across fields.
++Will be improved if it proves useful.
++
++------------------------------------------------------------
++
++** emacspeak-speak-next-personality-chunk
++
++Moves to the front of next chunk having current personality.
++Speak that chunk after moving.
++
++------------------------------------------------------------
++
++** emacspeak-speak-next-window	Key Sequence: control e control n 
++
++Speak the next window.
++
++------------------------------------------------------------
++
++** emacspeak-speak-other-buffer	Key Sequence: control e meta b 
++
++Speak specified buffer.
++Useful to listen to a buffer while in a different context.
++
++------------------------------------------------------------
++
++** emacspeak-speak-other-window
++
++Speak contents of `other' window.
++Speaks entire window irrespective of point.
++Semantics  of `other' is the same as for the builtin Emacs command
++`other-window'.
++Optional argument ARG  specifies `other' window to speak.
++
++------------------------------------------------------------
++
++** emacspeak-speak-page	Key Sequence: control e [ 
++
++Speak a page.
++With prefix ARG, speaks rest of current page.
++Negative prefix arg will read from start of current page to point.
++If option  `voice-lock-mode' is on, then it will use any defined personality.
++
++------------------------------------------------------------
++
++** emacspeak-speak-page-interactively	Key Sequence: control e ] 
++
++Speak the start of, rest of, or the entire page.
++'s' to speak the start.
++'r' to speak the rest.
++any other key to speak entire page.
++
++------------------------------------------------------------
++
++** emacspeak-speak-paragraph	Key Sequence: control e { 
++
++Speak paragraph.
++With prefix arg, speaks rest of current paragraph.
++Negative prefix arg will read from start of current paragraph to point.
++If voice-lock-mode is on, then it will use any defined personality. 
++
++------------------------------------------------------------
++
++** emacspeak-speak-paragraph-interactively	Key Sequence: control e  cap P  
++
++Speak the start of, rest of, or the entire paragraph.
++'s' to speak the start.
++'r' to speak the rest.
++any other key to speak entire paragraph.
++
++------------------------------------------------------------
++
++** emacspeak-speak-predefined-window	Key Sequence: control e 9   control e 8   control e 7   control e 6   control e 5   control e 4   control e 3   control e 2   control e 1   control e 0 
++
++Speak one of the first 10 windows on the screen.
++Speaks entire window irrespective of point.
++In general, you'll never have Emacs split the screen into more than
++two or three.
++Argument ARG determines the 'other' window to speak.
++Semantics  of `other' is the same as for the builtin Emacs command
++`other-window'.
++
++------------------------------------------------------------
++
++** emacspeak-speak-previous-field	Key Sequence: control e < 
++
++Skip backwards across and speak  contiguous sequence of non-blank characters.
++Useful in moving across fields.
++Will be improved if it proves useful.
++
++------------------------------------------------------------
++
++** emacspeak-speak-previous-personality-chunk
++
++Moves to the front of previous chunk having current personality.
++Speak that chunk after moving.
++
++------------------------------------------------------------
++
++** emacspeak-speak-previous-window	Key Sequence: control e control p 
++
++Speak the previous window.
++
++------------------------------------------------------------
++
++** emacspeak-speak-rectangle	Key Sequence: control e  cap R  
++
++Speak a rectangle of text.
++Rectangle is delimited by point and mark.
++When call from a program,
++arguments specify the START and END of the rectangle.
++
++------------------------------------------------------------
++
++** emacspeak-speak-region	Key Sequence: control e r 
++
++Speak region.
++Argument START  and END specify region to speak.
++
++------------------------------------------------------------
++
++** emacspeak-speak-rest-of-buffer	Key Sequence: control e n 
++
++Speak remainder of the buffer starting at point
++
++------------------------------------------------------------
++
++** emacspeak-speak-sentence
++
++Speak current sentence.
++With prefix ARG, speaks the rest of the sentence  from point.
++Negative prefix arg speaks from start of sentence to point.
++
++------------------------------------------------------------
++
++** emacspeak-speak-set-display-table
++
++Sets up buffer specific speech display table that controls how
++special characters are spoken. Interactive prefix argument causes
++setting to be global.
++
++------------------------------------------------------------
++
++** emacspeak-speak-sexp	Key Sequence: control e ' 
++
++Speak current sexp.
++With prefix ARG, speaks the rest of the sexp  from point.
++Negative prefix arg speaks from start of sexp to point.
++If option  `voice-lock-mode' is on, then uses the personality.
++
++------------------------------------------------------------
++
++** emacspeak-speak-sexp-interactively	Key Sequence: control e " 
++
++Speak the start of, rest of, or the entire sexp.
++'s' to speak the start.
++'r' to speak the rest.
++any other key to speak entire sexp.
++
++------------------------------------------------------------
++
++** emacspeak-speak-skim-buffer
++
++Skim the current buffer  a paragraph at a time.
++
++------------------------------------------------------------
++
++** emacspeak-speak-skim-next-paragraph
++
++Skim next paragraph.
++
++------------------------------------------------------------
++
++** emacspeak-speak-skim-paragraph
++
++Skim paragraph.
++Skimming a paragraph results in the speech speeding up after
++the first clause.
++Speech is scaled by the value of dtk-speak-skim-scale
++
++------------------------------------------------------------
++
++** emacspeak-speak-spaces-at-point	Key Sequence: control e CONTROL meta @ 
++
++Speak the white space at point.
++
++------------------------------------------------------------
++
++** emacspeak-speak-spell-current-word
++
++Spell word at  point.
++
++------------------------------------------------------------
++
++** emacspeak-speak-this-personality-chunk
++
++Speak chunk of text around point that has current
++personality.
++
++------------------------------------------------------------
++
++** emacspeak-speak-time	Key Sequence: control e t 
++
++Speak the time.
++Optional interactive prefix arg `C-u'invokes world clock.
++Timezone is specified using minibuffer completion.
++Second interactive prefix sets clock to new timezone.
++
++------------------------------------------------------------
++
++** emacspeak-speak-version	Key Sequence: control e  cap V  
++
++Announce version information for running emacspeak.
++
++------------------------------------------------------------
++
++** emacspeak-speak-voice-annotate-paragraphs
++
++Locate paragraphs and voice annotate the first word.
++Here, paragraph is taken to mean a chunk of text preceded by a blank line.
++Useful to do this before you listen to an entire buffer.
++
++------------------------------------------------------------
++
++** emacspeak-speak-window-information	Key Sequence: control e control w 
++
++Speaks information about current window.
++
++------------------------------------------------------------
++
++** emacspeak-speak-word	Key Sequence: control e w 
++
++Speak current word.
++With prefix ARG, speaks the rest of the word from point.
++Negative prefix arg speaks from start of word to point.
++If executed  on the same buffer position a second time, the word is
++spelt instead of being spoken.
++
++------------------------------------------------------------
++
++** emacspeak-speak-word-interactively
++
++Speak the start of, rest of, or the entire word.
++'s' to speak the start.
++'r' to speak the rest.
++any other key to speak entire word.
++
++------------------------------------------------------------
++
++** emacspeak-speak-world-clock
++
++Display current date and time  for specified zone.
++Optional second arg `set' sets the TZ environment variable as well.
++
++------------------------------------------------------------
++
++** emacspeak-switch-to-completions-window
++
++Jump to the *Completions* buffer if it is active.
++We make the current minibuffer contents (which is obviously the
++prefix for each entry in the completions buffer) inaudible
++to reduce chatter.
++
++------------------------------------------------------------
++
++** emacspeak-toggle-action-mode
++
++Toggle state of  Emacspeak  action mode.
++Interactive PREFIX arg means toggle  the global default value, and then set the
++current local  value to the result.
++
++------------------------------------------------------------
++
++** emacspeak-toggle-audio-indentation	Key Sequence: control e d i 
++
++Toggle state of  Emacspeak  audio indentation.
++Interactive PREFIX arg means toggle  the global default value, and then set the
++current local  value to the result.
++Specifying the method of indentation as `tones'
++results in the Dectalk producing a tone whose length is a function of the
++line's indentation.  Specifying `speak'
++results in the number of initial spaces being spoken.
++
++------------------------------------------------------------
++
++** emacspeak-toggle-character-echo	Key Sequence: control e d k 
++
++Toggle state of  Emacspeak  character echo.
++Interactive PREFIX arg means toggle  the global default value, and then set the
++current local  value to the result.
++
++------------------------------------------------------------
++
++** emacspeak-toggle-comint-autospeak	Key Sequence: control e control q 
++
++Toggle state of Emacspeak comint autospeak.
++When turned on, comint output is automatically spoken.  Turn this on if
++you want your shell to speak its results.  Interactive
++PREFIX arg means toggle the global default value, and then
++set the current local value to the result.
++
++------------------------------------------------------------
++
++** emacspeak-toggle-line-echo	Key Sequence: control e d l 
++
++Toggle state of  Emacspeak  line echo.
++Interactive PREFIX arg means toggle  the global default value, and then set the
++current local  value to the result.
++
++------------------------------------------------------------
++
++** emacspeak-toggle-mail-alert	Key Sequence: control e meta m 
++
++Toggle state of  Emacspeak  mail alert.
++Interactive PREFIX arg means toggle  the global default value, and then set the
++current local  value to the result.
++Turning on this option results in Emacspeak producing an auditory icon
++indicating the arrival  of new mail when displaying the mode line.
++
++------------------------------------------------------------
++
++** emacspeak-toggle-show-point	Key Sequence: control e control d 
++
++Toggle state of  Emacspeak-show-point.
++Interactive PREFIX arg means toggle  the global default value, and then set the
++current local  value to the result.
++
++------------------------------------------------------------
++
++** emacspeak-toggle-speak-line-invert-filter	Key Sequence: control e \ 
++
++Toggle state of   how column filter is interpreted.
++Interactive PREFIX arg means toggle  the global default value, and then set the
++current local  value to the result.
++
++------------------------------------------------------------
++
++** emacspeak-toggle-speak-messages	Key Sequence: control e q 
++
++Toggle the state of whether emacspeak echoes messages.
++
++------------------------------------------------------------
++
++** emacspeak-toggle-which-function	Key Sequence: control e meta w 
++
++Toggle state of  Emacspeak  which function mode.
++Interactive PREFIX arg means toggle  the global default value, and then set the
++current local  value to the result.
++
++------------------------------------------------------------
++
++** emacspeak-toggle-word-echo	Key Sequence: control e d w 
++
++Toggle state of  Emacspeak  word echo.
++Interactive PREFIX arg means toggle  the global default value, and then set the
++current local  value to the result.
++
++------------------------------------------------------------
++
++** emacspeak-use-customized-blink-paren
++
++A customized blink-paren to speak  matching opening paren.
++We need to call this in case Emacs
++is anal and loads its own builtin blink-paren function
++which does not talk.
++
++------------------------------------------------------------
++
++** emacspeak-view-register	Key Sequence: control e v 
++
++Display the contents of a register, and then speak it.
++
++------------------------------------------------------------
++
++** emacspeak-voicify-rectangle
++
++Voicify the current rectangle.
++When calling from a program,arguments are
++START END personality
++Prompts for PERSONALITY  with completion when called interactively.
++
++------------------------------------------------------------
++
++** emacspeak-voicify-region
++
++Voicify the current region.
++When calling from a program,arguments are
++START END personality.
++Prompts for PERSONALITY  with completion when called interactively.
++
++------------------------------------------------------------
++
++** emacspeak-zap-tts	Key Sequence: control e d z 
++
++Send this command to the TTS directly.
++
++------------------------------------------------------------
++
++** emacspeak-table-copy-current-element-to-register
++
++Speak current table element
++
++------------------------------------------------------------
++
++** emacspeak-table-copy-to-clipboard
++
++Copy table in current buffer to the table clipboard.
++Current buffer must be in emacspeak-table mode.
++
++------------------------------------------------------------
++
++** emacspeak-table-display-table-in-region	Key Sequence: control e TAB 
++
++Recognize tabular data in current region and display it in table
++browsing mode in a a separate buffer.
++emacspeak table mode is designed to let you browse tabular data using
++all the power of the two-dimensional spatial layout while giving you
++sufficient contextual information.  The tables subdirectory of the
++emacspeak distribution contains some sample tables --these are the
++CalTrain schedules.  Execute command `describe-mode' bound to
++C-h m in a buffer that is in emacspeak table mode to read
++the documentation on the table browser.
++
++------------------------------------------------------------
++
++** emacspeak-table-find-csv-file
++
++Process a csv (comma separated values) file. 
++The processed  data and presented using emacspeak table navigation. 
++
++------------------------------------------------------------
++
++** emacspeak-table-find-file	Key Sequence: control e control t 
++
++Open a file containing table data and display it in table mode.
++emacspeak table mode is designed to let you browse tabular data using
++all the power of the two-dimensional spatial layout while giving you
++sufficient contextual information.  The etc/tables subdirectory of the
++emacspeak distribution contains some sample tables --these are the
++CalTrain schedules.  Execute command `describe-mode' bound to
++C-h m in a buffer that is in emacspeak table mode to read
++the documentation on the table browser.
++
++------------------------------------------------------------
++
++** emacspeak-table-get-entry-with-headers
++
++Return   both row and column header and table element
++
++------------------------------------------------------------
++
++** emacspeak-table-goto
++
++Prompt for a table cell coordinates and jump to it.
++
++------------------------------------------------------------
++
++** emacspeak-table-goto-bottom
++
++Goes to the bottom of the current column.
++
++------------------------------------------------------------
++
++** emacspeak-table-goto-left
++
++Goes to the left of the current row.
++
++------------------------------------------------------------
++
++** emacspeak-table-goto-right
++
++Goes to the right of the current row.
++
++------------------------------------------------------------
++
++** emacspeak-table-goto-top
++
++Goes to the top of the current column.
++
++------------------------------------------------------------
++
++** emacspeak-table-next-column
++
++Move to the next column if possible
++
++------------------------------------------------------------
++
++** emacspeak-table-next-row
++
++Move to the next row if possible
++
++------------------------------------------------------------
++
++** emacspeak-table-paste-from-clipboard
++
++Paste the emacspeak table clipboard into the current buffer.
++Use the major  mode of this buffer to  decide what kind of table
++markup to use.
++
++------------------------------------------------------------
++
++** emacspeak-table-previous-column
++
++Move to the previous column  if possible
++
++------------------------------------------------------------
++
++** emacspeak-table-previous-row
++
++Move to the previous row if possible
++
++------------------------------------------------------------
++
++** emacspeak-table-search
++
++Search the table for matching elements.  Interactively prompts for
++row or column to search and pattern to look for.    If there is a match, makes
++the matching cell current. When called from a program, `what' can
++  be either `row' or `column'.
++
++------------------------------------------------------------
++
++** emacspeak-table-search-column
++
++Search in current table column.
++
++------------------------------------------------------------
++
++** emacspeak-table-search-headers
++
++Search the table row or column headers.  Interactively prompts for
++row or column to search and pattern to look for.  If there is a
++match, makes the matching row or column current.
++
++------------------------------------------------------------
++
++** emacspeak-table-search-row
++
++Search in current table row.
++
++------------------------------------------------------------
++
++** emacspeak-table-select-automatic-speaking-method
++
++Interactively select the kind of automatic speech to produce when
++browsing table elements
++
++------------------------------------------------------------
++
++** emacspeak-table-sort-on-current-column
++
++Sort table on current column. 
++
++------------------------------------------------------------
++
++** emacspeak-table-speak-both-headers-and-element
++
++Speak  both row and column header and table element
++
++------------------------------------------------------------
++
++** emacspeak-table-speak-column-filtered
++
++Speaks a table column after applying a specified column filter.
++Optional prefix arg prompts for a new filter.
++
++------------------------------------------------------------
++
++** emacspeak-table-speak-column-header-and-element
++
++Speak  column header and table element
++
++------------------------------------------------------------
++
++** emacspeak-table-speak-coordinates
++
++Speak current table coordinates.
++
++------------------------------------------------------------
++
++** emacspeak-table-speak-current-element
++
++Speak current table element
++
++------------------------------------------------------------
++
++** emacspeak-table-speak-dimensions
++
++Speak current table dimensions.
++
++------------------------------------------------------------
++
++** emacspeak-table-speak-row-filtered
++
++Speaks a table row after applying a specified row filter.
++Optional prefix arg prompts for a new filter.
++
++------------------------------------------------------------
++
++** emacspeak-table-speak-row-header-and-element
++
++Speak  row header and table element
++
++------------------------------------------------------------
++
++** emacspeak-table-ui-filter-load
++
++Load saved filter settings.
++
++------------------------------------------------------------
++
++** emacspeak-table-ui-filter-save
++
++Save out filter settings.
++
++------------------------------------------------------------
++
++** emacspeak-table-view-csv-buffer
++
++Process a csv (comma separated values) data. 
++The processed  data and presented using emacspeak table navigation. 
++
++------------------------------------------------------------
++
++** emacspeak-widget-browse-widget-interactively
++
++Allows you to browse a widget
++
++------------------------------------------------------------
++
++** emacspeak-widget-help
++
++Speak help for widget under point.
++
++------------------------------------------------------------
++
++** emacspeak-widget-summarize-parent
++
++Summarize parent of widget at point.
++
++------------------------------------------------------------
++
++** emacspeak-widget-summarize-widget-under-point
++
++Summarize a widget if any under point.
++Optional interactive prefix specifies how many levels to go up from current
++widget before summarizing.
++
++------------------------------------------------------------
++
++** emacspeak-widget-update-from-minibuffer
++
++Sets widget at point by invoking its prompter.
++
++------------------------------------------------------------
++
++** emacspeak-annotate-add-annotation
++
++Add annotation to the annotation working buffer.
++Prompt for annotation buffer if not already set.
++Interactive prefix arg `reset' prompts for the annotation
++buffer even if one is already set.
++Annotation is entered in a temporary buffer and the
++annotation is inserted into the working buffer when complete.
++
++------------------------------------------------------------
++
++** emacspeak-clipboard-copy	Key Sequence: control e control c 
++
++Copy contents of the region to the emacspeak clipboard.
++Previous contents of the clipboard will be overwritten.  The Emacspeak
++clipboard is a convenient way of sharing information between
++independent Emacspeak sessions running on the same or different
++machines.  Do not use this for sharing information within an Emacs
++session --Emacs' register commands are far more efficient and
++light-weight.  Optional interactive prefix arg results in Emacspeak
++prompting for the clipboard file to use.
++Argument START and END specifies  region.
++Optional argument PROMPT  specifies whether we prompt for the name of a clipboard file.
++
++------------------------------------------------------------
++
++** emacspeak-clipboard-paste	Key Sequence: control e control y 
++
++Yank contents of the Emacspeak clipboard at point.
++The Emacspeak clipboard is a convenient way of sharing information between
++independent Emacspeak sessions running on the same or different
++machines.  Do not use this for sharing information within an Emacs
++session --Emacs' register commands are far more efficient and
++light-weight.  Optional interactive prefix arg pastes from
++the emacspeak table clipboard instead.
++
++------------------------------------------------------------
++
++** emacspeak-copy-current-file	Key Sequence: control e meta c 
++
++Copy file visited in current buffer to new location.
++Prompts for the new location and preserves modification time
++  when copying.  If location is a directory, the file is copied
++  to that directory under its current name ; if location names
++  a file in an existing directory, the specified name is
++  used.  Asks for confirmation if the copy will result in an
++  existing file being overwritten.
++
++------------------------------------------------------------
++
++** emacspeak-curl
++
++Grab URL using Curl, and preview it with W3.
++
++------------------------------------------------------------
++
++** emacspeak-customize	Key Sequence: control e  cap C  
++
++Customize Emacspeak.
++
++------------------------------------------------------------
++
++** emacspeak-customize-personal-settings
++
++Create a customization buffer for browsing and updating
++personal customizations.
++
++------------------------------------------------------------
++
++** emacspeak-cvs-get-anonymous	Key Sequence: control e <control down> 
++
++Get latest cvs snapshot of emacspeak.
++
++------------------------------------------------------------
++
++** emacspeak-cvs-gnu-get-project-snapshot
++
++Grab CVS snapshot  of specified project from GNU.
++
++------------------------------------------------------------
++
++** emacspeak-cvs-sf-get-project-snapshot
++
++Grab CVS snapshot  of specified project from Sourceforge.
++
++------------------------------------------------------------
++
++** emacspeak-emergency-tts-restart	Key Sequence: control e <insert> 
++
++For use in an emergency.
++Will start TTS engine specified by 
++emacspeak-emergency-tts-server.
++
++------------------------------------------------------------
++
++** emacspeak-frame-label-or-switch-to-labelled-frame	Key Sequence: control e meta f 
++
++Switch to labelled frame.
++With optional PREFIX argument, label current frame.
++
++------------------------------------------------------------
++
++** emacspeak-frame-read-frame-label
++
++Read a frame label with completion.
++
++------------------------------------------------------------
++
++** emacspeak-generate-documentation
++
++Generate docs for all emacspeak commands.
++Prompts for FILENAME in which to save the documentation.
++Warning! Contents of file filename will be overwritten.
++
++------------------------------------------------------------
++
++** emacspeak-generate-texinfo-command-documentation
++
++Generate texinfo documentation  for all emacspeak
++commands  into file commands.texi.
++Warning! Contents of file commands.texi will be overwritten.
++
++------------------------------------------------------------
++
++** emacspeak-generate-texinfo-option-documentation
++
++Generate texinfo documentation  for all emacspeak
++options  into file filename.
++Warning! Contents of file filename will be overwritten.
++
++------------------------------------------------------------
++
++** emacspeak-kill-buffer-quietly
++
++Kill current buffer without asking for confirmation.
++
++------------------------------------------------------------
++
++** emacspeak-learn-mode	Key Sequence: control e control h 
++
++Helps you learn the keys.  You can press keys and hear what they do.
++To leave, press C-g.
++
++------------------------------------------------------------
++
++** emacspeak-link-current-file	Key Sequence: control e meta l 
++
++Link (hard link) file visited in current buffer to new location.
++Prompts for the new location and preserves modification time
++  when linking.  If location is a directory, the file is copied
++  to that directory under its current name ; if location names
++  a file in an existing directory, the specified name is
++  used.  Signals an error if target already exists.
++
++------------------------------------------------------------
++
++** emacspeak-links
++
++Launch links on  specified URL in a new terminal.
++
++------------------------------------------------------------
++
++** emacspeak-lynx
++
++Launch lynx on  specified URL in a new terminal.
++
++------------------------------------------------------------
++
++** emacspeak-next-frame-or-buffer	Key Sequence: <control right> 
++
++Move to next buffer.
++With optional interactive prefix arg `frame', move to next frame instead.
++
++------------------------------------------------------------
++
++** emacspeak-previous-frame-or-buffer	Key Sequence: <control left> 
++
++Move to previous buffer.
++With optional interactive prefix arg `frame', move to previous frame instead.
++
++------------------------------------------------------------
++
++** emacspeak-root	Key Sequence: control e control r 
++
++Start a root shell or switch to one that already exists.
++Optional interactive prefix arg `cd' executes cd
++default-directory after switching.
++
++------------------------------------------------------------
++
++** emacspeak-select-this-buffer-next-display	Key Sequence: control e <control right> 
++
++Select this buffer as displayed in a `next' frame.
++See documentation for command
++`emacspeak-select-this-buffer-other-window-display' for the
++meaning of `next'.
++
++------------------------------------------------------------
++
++** emacspeak-select-this-buffer-other-window-display
++
++Switch  to this buffer as displayed in a different frame.  Emacs
++allows you to display the same buffer in multiple windows or
++frames.  These different windows can display different
++portions of the buffer.  This is equivalent to leaving a
++book open at places at once.  This command allows you to
++move to the places where you have left the book open.  The
++number used to invoke this command specifies which of the
++displays you wish to select.  Typically you will have two or
++at most three such displays open.  The current display is 0,
++the next is 1, and so on.  Optional argument ARG specifies
++the display to select.
++
++------------------------------------------------------------
++
++** emacspeak-select-this-buffer-previous-display	Key Sequence: control e <control left> 
++
++Select this buffer as displayed in a `previous' window.
++See documentation for command
++`emacspeak-select-this-buffer-other-window-display' for the
++meaning of `previous'.
++
++------------------------------------------------------------
++
++** emacspeak-show-personality-at-point	Key Sequence: control e meta v 
++
++Show value of property personality (and possibly face)
++at point.
++
++------------------------------------------------------------
++
++** emacspeak-show-property-at-point	Key Sequence: control e meta p 
++
++Show value of PROPERTY at point.
++If optional arg property is not supplied, read it interactively.
++Provides completion based on properties that are of interest.
++If no property is set, show a message and exit.
++
++------------------------------------------------------------
++
++** emacspeak-skip-blank-lines-backward	Key Sequence: <shift> <up> 
++
++Move backward  across blank lines.
++The line under point is   then spoken.
++Signals beginning  of buffer.
++
++------------------------------------------------------------
++
++** emacspeak-skip-blank-lines-forward	Key Sequence: <shift> <down> 
++
++Move forward across blank lines.
++The line under point is then spoken.
++Signals end of buffer.
++
++------------------------------------------------------------
++
++** emacspeak-speak-browse-linux-howto	Key Sequence: control e  cap H  
++
++Browse a Linux Howto file.
++We cleanup underlining, and set up outline mode correctly.
++
++------------------------------------------------------------
++
++** emacspeak-speak-hostname	Key Sequence: control e meta h 
++
++Speak host name.
++
++------------------------------------------------------------
++
++** emacspeak-speak-popup-messages	Key Sequence: control h  cap M  
++
++Pop up messages buffer.
++If it is already selected then hide it and try to restore
++previous window configuration.
++
++------------------------------------------------------------
++
++** emacspeak-speak-run-shell-command	Key Sequence: control e ! 
++
++Invoke shell COMMAND and display its output as a table.  The results
++are placed in a buffer in Emacspeak's table browsing mode.  Optional
++interactive prefix arg as-root runs the command as root (not yet
++implemented).  Use this for running shell commands that produce
++tabulated output.  This command should be used for shell commands that
++produce tabulated output that works with Emacspeak's table recognizer.
++Verify this first by running the command in a shell and executing
++command `emacspeak-table-display-table-in-region' normally bound to
++C-e TAB.
++
++------------------------------------------------------------
++
++** emacspeak-speak-show-active-network-interfaces	Key Sequence: control e  cap I  
++
++Shows all active network interfaces in the echo area.
++With interactive prefix argument ADDRESS it prompts for a
++specific interface and shows its address. The address is
++also copied to the kill ring for convenient yanking.
++
++------------------------------------------------------------
++
++** emacspeak-speak-show-memory-used
++
++Convenience command to view state of memory used in this session so far.
++
++------------------------------------------------------------
++
++** emacspeak-speak-telephone-directory
++
++Lookup and display a phone number.
++With prefix arg, opens the phone book for editting.
++
++------------------------------------------------------------
++
++** emacspeak-speak-this-buffer-next-display	Key Sequence: control e <right> 
++
++Speak this buffer as displayed in a `previous' window.
++See documentation for command
++`emacspeak-speak-this-buffer-other-window-display' for the
++meaning of `next'.
++
++------------------------------------------------------------
++
++** emacspeak-speak-this-buffer-other-window-display	Key Sequence: control e / 
++
++Speak this buffer as displayed in a different frame.  Emacs
++allows you to display the same buffer in multiple windows or
++frames.  These different windows can display different
++portions of the buffer.  This is equivalent to leaving a
++book open at places at once.  This command allows you to
++listen to the places where you have left the book open.  The
++number used to invoke this command specifies which of the
++displays you wish to speak.  Typically you will have two or
++at most three such displays open.  The current display is 0,
++the next is 1, and so on.  Optional argument ARG specifies
++the display to speak.
++
++------------------------------------------------------------
++
++** emacspeak-speak-this-buffer-previous-display	Key Sequence: control e <aleft> 
++
++Speak this buffer as displayed in a `previous' window.
++See documentation for command
++`emacspeak-speak-this-buffer-other-window-display' for the
++meaning of `previous'.
++
++------------------------------------------------------------
++
++** emacspeak-ssh-tts-restart
++
++Restart specified ssh tts server.
++
++------------------------------------------------------------
++
++** emacspeak-sudo
++
++SUDo command --run command as super user.
++
++------------------------------------------------------------
++
++** emacspeak-switch-to-previous-buffer
++
++Switch to most recently used interesting buffer.
++
++------------------------------------------------------------
++
++** emacspeak-symlink-current-file	Key Sequence: control e meta s 
++
++Link (symbolic link) file visited in current buffer to new location.
++Prompts for the new location and preserves modification time
++  when linking.  If location is a directory, the file is copied
++  to that directory under its current name ; if location names
++  a file in an existing directory, the specified name is
++  used.  Signals an error if target already exists.
++
++------------------------------------------------------------
++
++** emacspeak-view-emacspeak-doc	Key Sequence: control e  cap D  
++
++Display a summary of all Emacspeak commands.
++
++------------------------------------------------------------
++
++** emacspeak-view-emacspeak-faq	Key Sequence: control e  cap F  
++
++Browse the Emacspeak FAQ.
++
++------------------------------------------------------------
++
++** emacspeak-view-emacspeak-news	Key Sequence: control e  cap N  
++
++Display info on recent change to Emacspeak.
++
++------------------------------------------------------------
++
++** emacspeak-view-emacspeak-tips	Key Sequence: control e  cap T  
++
++Browse  Emacspeak productivity tips.
++
++------------------------------------------------------------
++
++** emacspeak-wizards-count-slides-in-region
++
++Count slides starting from point.
++
++------------------------------------------------------------
++
++** emacspeak-wizards-dvi-display
++
++Called to set up preview of an DVI file.
++Assumes we are in a buffer visiting a .DVI file.
++Previews those contents as text and nukes the buffer
++visiting the DVI file.
++
++------------------------------------------------------------
++
++** emacspeak-wizards-dvi-mode
++
++Major mode for browsing DVI files.
++
++
++DVI files  are converted to text and previewed using text mode.
++
++This mode runs the hook `emacspeak-wizards-dvi-mode-hook', as the final step
++during initialization.
++
++key             binding
++---             -------
++
++
++
++------------------------------------------------------------
++
++** emacspeak-wizards-edit-file-as-root
++
++Edit file as root using sudo vi.
++See /etc/sudoers for how to set up sudo.
++
++------------------------------------------------------------
++
++** emacspeak-wizards-find-grep
++
++Run compile using find and grep. 
++Interactive  arguments specify filename pattern and search pattern.
++
++------------------------------------------------------------
++
++** emacspeak-wizards-find-longest-line-in-region
++
++Find longest line in region.
++Moves to the longest line when called interactively.
++
++------------------------------------------------------------
++
++** emacspeak-wizards-find-longest-paragraph-in-region
++
++Find longest paragraph in region.
++Moves to the longest paragraph when called interactively.
++
++------------------------------------------------------------
++
++** emacspeak-wizards-finder-find
++
++Run find-dired on specified switches after prompting for the
++directory to where find is to be launched.
++
++------------------------------------------------------------
++
++** emacspeak-wizards-finder-mode
++
++Emacspeak Finder
++
++
++
++This mode runs the hook `emacspeak-wizards-finder-mode-hook', as the final step
++during initialization.
++
++key             binding
++---             -------
++
++
++
++------------------------------------------------------------
++
++** emacspeak-wizards-fix-read-only-text
++
++Nuke read-only property on text range.
++
++------------------------------------------------------------
++
++** emacspeak-wizards-fix-typo
++
++Search and replace  recursively in all files with extension `ext'
++for `word' and replace it with correction.
++Use with caution.
++
++------------------------------------------------------------
++
++** emacspeak-wizards-generate-finder
++
++Generate a widget-enabled finder wizard.
++
++------------------------------------------------------------
++
++** emacspeak-wizards-generate-voice-sampler
++
++Generate a buffer that shows a sample line in all the ACSS settings
++for the current voice family.
++
++------------------------------------------------------------
++
++** emacspeak-wizards-get-table-content-from-file
++
++Extract table specified by depth and count from HTML
++content at file.
++Extracted content is placed as a csv file in task.csv.
++
++------------------------------------------------------------
++
++** emacspeak-wizards-get-table-content-from-url
++
++Extract table specified by depth and count from HTML
++content at URL.
++Extracted content is placed as a csv file in task.csv.
++
++------------------------------------------------------------
++
++** emacspeak-wizards-google-hits
++
++Filter Google results after performing search to show just the
++hits.
++
++------------------------------------------------------------
++
++** emacspeak-wizards-how-many-matches
++
++If you define a file local variable 
++called `emacspeak-occur-pattern' that holds a regular expression 
++that matches  lines of interest, you can use this command to conveniently
++run `how-many' to count  matching header lines.
++With interactive prefix arg, prompts for and remembers the file local pattern.
++
++------------------------------------------------------------
++
++** emacspeak-wizards-move-and-speak
++
++Speaks a chunk of text bounded by point and a target position.
++Target position is specified using a navigation command and a
++count that specifies how many times to execute that command
++first.
++Point is left at the target position.
++Interactively, command is specified by pressing the key that
++;;invokes the command.
++
++------------------------------------------------------------
++
++** emacspeak-wizards-occur-header-lines
++
++If you define a file local variable called
++`emacspeak-occur-pattern' that holds a regular expression that
++matches header lines, you can use this command to conveniently
++run `occur' to find matching header lines. With prefix arg,
++prompts for and sets value of the file local pattern.
++
++------------------------------------------------------------
++
++** emacspeak-wizards-portfolio-quotes
++
++Bring up detailed stock quotes for portfolio specified by 
++emacspeak-websearch-personal-portfolio.
++
++------------------------------------------------------------
++
++** emacspeak-wizards-ppp-toggle
++
++Bring up or bring down ppp.
++
++------------------------------------------------------------
++
++** emacspeak-wizards-ppt-display
++
++Called to set up preview of an PPT file.
++Assumes we are in a buffer visiting a .ppt file.
++Previews those contents as HTML and nukes the buffer
++visiting the ppt file.
++
++------------------------------------------------------------
++
++** emacspeak-wizards-ppt-mode
++
++Major mode for browsing PPT slides.
++
++
++PPT files  are converted to HTML and previewed using W3.
++
++In addition to any hooks its parent mode `text-mode' might have run,
++this mode runs the hook `emacspeak-wizards-ppt-mode-hook', as the final step
++during initialization.
++
++key             binding
++---             -------
++
++
++
++------------------------------------------------------------
++
++** emacspeak-wizards-rivo
++
++Rivo wizard.
++Prompts for relevant information and schedules a rivo job using
++  UNIX AT scheduling facility.
++RIVO is implemented by rivo.pl ---
++ a Perl script  that can be used to launch realaudio and record
++   streaming media for  a specified duration.
++
++------------------------------------------------------------
++
++** emacspeak-wizards-rpm-query-in-dired
++
++Run rpm -qi on current dired entry.
++
++------------------------------------------------------------
++
++** emacspeak-wizards-shell-toggle	Key Sequence: control e <f11> 
++
++Switch to the shell buffer and cd to 
++ the directory of the current buffer.
++
++------------------------------------------------------------
++
++** emacspeak-wizards-show-commentary
++
++Display commentary. Default is to display commentary from current buffer.
++
++------------------------------------------------------------
++
++** emacspeak-wizards-show-environment-variable
++
++Display value of specified environment variable.
++
++------------------------------------------------------------
++
++** emacspeak-wizards-show-face
++
++Show salient properties of specified face.
++
++------------------------------------------------------------
++
++** emacspeak-wizards-show-list-variable
++
++Convenience command to view Emacs variables that are long lists.
++Prompts for a variable name and displays its value in a separate buffer.
++Lists are displayed one element per line.
++Argument VAR specifies variable whose value is to be displayed.
++
++------------------------------------------------------------
++
++** emacspeak-wizards-speak-iso-datetime
++
++Make ISO date-time speech friendly.
++
++------------------------------------------------------------
++
++** emacspeak-wizards-spot-words
++
++Searches recursively in all files with extension `ext'
++for `word' and displays hits in a compilation buffer.
++
++------------------------------------------------------------
++
++** emacspeak-wizards-squeeze-blanks
++
++Squeeze multiple blank lines in current buffer.
++
++------------------------------------------------------------
++
++** emacspeak-wizards-terminal
++
++Launch terminal and rename buffer appropriately.
++
++------------------------------------------------------------
++
++** emacspeak-wizards-toggle-mm-dd-yyyy-date-pronouncer
++
++Toggle pronunciation of mm-dd-yyyy dates.
++
++------------------------------------------------------------
++
++** emacspeak-wizards-tpctl-display-status
++
++Show display status on thinkpads using tpctl.
++
++------------------------------------------------------------
++
++** emacspeak-wizards-tramp-open-location
++
++Open specified tramp location.
++Location is specified by name.
++
++------------------------------------------------------------
++
++** emacspeak-wizards-unhex-uri
++
++UnEscape URI
++
++------------------------------------------------------------
++
++** emacspeak-wizards-units
++
++Run units in a comint sub-process.
++
++------------------------------------------------------------
++
++** emacspeak-wizards-use-w3-or-w3m
++
++Alternates between using W3 and W3M for browse-url.
++
++------------------------------------------------------------
++
++** emacspeak-wizards-vc-n
++
++Accelerator for VC viewer.
++
++------------------------------------------------------------
++
++** emacspeak-wizards-vc-viewer
++
++View contents of specified virtual console.
++
++------------------------------------------------------------
++
++** emacspeak-wizards-vc-viewer-mode
++
++Major mode for interactively viewing virtual console contents.
++
++
++key             binding
++---             -------
++
++C-l		emacspeak-wizards-vc-viewer-refresh
++
++
++
++This mode runs the hook `emacspeak-wizards-vc-viewer-mode-hook', as the final step
++during initialization.
++
++------------------------------------------------------------
++
++** emacspeak-wizards-vc-viewer-refresh
++
++Refresh view of VC we're viewing.
++
++------------------------------------------------------------
++
++** emacspeak-wizards-vi-as-su-file
++
++Launch sudo vi on specified file in a terminal.
++
++------------------------------------------------------------
++
++** emacspeak-wizards-voice-sampler
++
++Read a personality  and apply it to the current line.
++
++------------------------------------------------------------
++
++** emacspeak-wizards-vpn-toggle
++
++Bring up or bring down vpn.
++
++------------------------------------------------------------
++
++** emacspeak-wizards-xl-display
++
++Called to set up preview of an XL file.
++Assumes we are in a buffer visiting a .xls file.
++Previews those contents as HTML and nukes the buffer
++visiting the xls file.
++
++------------------------------------------------------------
++
++** emacspeak-wizards-xl-mode
++
++Major mode for browsing XL spreadsheets.
++
++
++XL Sheets are converted to HTML and previewed using W3.
++
++In addition to any hooks its parent mode `text-mode' might have run,
++this mode runs the hook `emacspeak-wizards-xl-mode-hook', as the final step
++during initialization.
++
++key             binding
++---             -------
++
++
++
++------------------------------------------------------------
++
++** cd-tool	Key Sequence: control e DEL 
++
++Front-end to CDTool.
++Bind this function to a convenient key-
++Emacspeak users automatically have 
++this bound to <DEL> in the emacspeak keymap.
++
++Key     Action
++---     ------
++
+++       Next Track
++-       Previous Track
++SPC     Pause or Resume
++e       Eject
++=       Shuffle
++i       CD Info
++p       Play
++s       Stop
++t       track
++c       clip
++cap C   Save clip to disk
++
++
++------------------------------------------------------------
++
++** emacspeak-alsaplayer-launch
++
++Launch Alsaplayer.
++user is placed in a buffer associated with the newly created
++Alsaplayer session.
++
++------------------------------------------------------------
++
++** emacspeak-amphetadesk
++
++Open amphetadesk.
++
++------------------------------------------------------------
++
++** emacspeak-amphetadesk-quick-add
++
++Quick add URL to Amphetadesk by prompting for URL.
++
++------------------------------------------------------------
++
++** emacspeak-appt-repeat-announcement	Key Sequence: control e  cap A  
++
++Speaks the most recently displayed appointment message if any.
++
++------------------------------------------------------------
++
++** emacspeak-atom-browse
++
++Browse specified ATOM feed.
++
++------------------------------------------------------------
++
++** emacspeak-atom-display
++
++Retrieve and display ATOM URL.
++
++------------------------------------------------------------
++
++** emacspeak-daisy-open-book	Key Sequence: control e control b 
++
++Open Digital Talking Book specified by navigation file filename.
++
++This is the main entry point to the  Emacspeak Daisy reader.
++Opening a Daisy navigation file (.ncx file) results in a
++navigation buffer that can be used to browse and read the book.
++
++------------------------------------------------------------
++
++** emacspeak-filtertext	Key Sequence: control e ^ 
++
++Copy over text in region to special filtertext buffer in
++preparation for interactively filtering text. 
++
++------------------------------------------------------------
++
++** emacspeak-freeamp
++
++Play specified resource using freeamp.
++Resource is an  MP3 file or m3u playlist.
++The player is placed in a buffer in emacspeak-freeamp-mode.
++
++------------------------------------------------------------
++
++** emacspeak-freeamp-freeamp-call-command
++
++Call appropriate freeamp command.
++
++------------------------------------------------------------
++
++** emacspeak-freeamp-freeamp-command
++
++Execute FreeAmp command.
++
++------------------------------------------------------------
++
++** emacspeak-gridtext-apply
++
++Apply grid to region.
++
++------------------------------------------------------------
++
++** emacspeak-gridtext-load
++
++Load saved grid settings.
++
++------------------------------------------------------------
++
++** emacspeak-gridtext-save
++
++Save out grid settings.
++
++------------------------------------------------------------
++
++** emacspeak-hide-or-expose-all-blocks
++
++Hide or expose all blocks in buffer.
++
++------------------------------------------------------------
++
++** emacspeak-hide-or-expose-block	Key Sequence: control e j 
++
++Hide or expose a block of text.
++This command either hides or exposes a block of text
++starting on the current line.  A block of text is defined as
++a portion of the buffer in which all lines start with a
++common PREFIX.  Optional interactive prefix arg causes all
++blocks in current buffer to be hidden or exposed.
++
++------------------------------------------------------------
++
++** emacspeak-hide-speak-block-sans-prefix	Key Sequence: control e control j 
++
++Speaks current block after stripping its prefix.
++If the current block is not hidden, it first hides it.
++This is useful because as you locate blocks, you can invoke this
++command to listen to the block,
++and when you have heard enough navigate easily  to move past the block.
++
++------------------------------------------------------------
++
++** emacspeak-imcom
++
++Start IMCom.
++
++------------------------------------------------------------
++
++** emacspeak-info-wizard	Key Sequence: control h TAB 
++
++Read a node spec from the minibuffer and launch
++Info-goto-node.
++See documentation for command `Info-goto-node' for details on
++node-spec.
++
++------------------------------------------------------------
++
++** emacspeak-m-player	Key Sequence: control e : 
++
++Play specified resource using m-player.
++Resource is an  MP3 file or m3u playlist.
++The player is placed in a buffer in emacspeak-m-player-mode.
++
++------------------------------------------------------------
++
++** emacspeak-madplay
++
++Play specified resource using madplay.
++Resource is an  MP3 file or directory containing mp3 files.
++The player is placed in a buffer in emacspeak-madplay-mode.
++
++------------------------------------------------------------
++
++** emacspeak-madplay-madplay-call-command
++
++Call appropriate madplay command.
++
++------------------------------------------------------------
++
++** emacspeak-madplay-madplay-command
++
++Execute Madplay command.
++
++------------------------------------------------------------
++
++** emacspeak-ocr	Key Sequence: control e control o 
++
++An OCR front-end for the Emacspeak desktop.  
++
++Page image is acquired using tools from the SANE package.
++The acquired image is run through the OCR engine if one is
++available, and the results placed in a buffer that is
++suitable for browsing the results.
++
++For detailed help, invoke command emacspeak-ocr bound to
++C-e C-o to launch emacspeak-ocr-mode, and press
++`?' to display mode-specific help for emacspeak-ocr-mode.
++
++------------------------------------------------------------
++
++** emacspeak-realaudio	Key Sequence: control e ; 
++
++Start or control streaming audio including MP3 and
++realaudio.  If using `TRPlayer' as the player, accepts
++trplayer control commands if a stream is already playing.
++Otherwise, the playing stream is simply stopped.  If no
++stream is playing, this command prompts for a realaudio
++resource.  Realaudio resources can be specified either as a
++Realaudio URL, the location of a local Realaudio file, or as
++the name of a local Realaudio metafile. Realaudio resources
++you have played in this session are available in the
++minibuffer history.  The default is to play the resource you
++played most recently. Emacspeak uses the contents of the
++directory specified by variable
++emacspeak-realaudio-shortcuts-directory to offer a set of
++completions. Hit space to use this completion list.
++
++If using TRPlayer, you can either give one-shot commands
++using command emacspeak-realaudio available from anywhere on
++the audio desktop as `C-e ;'.
++Alternatively, switch to buffer *realaudio* using
++`C-e ;;' if you wish to issue many
++navigation commands.  Note that buffer *realaudio* uses a
++special major mode that provides the various navigation
++commands via single keystrokes.
++
++------------------------------------------------------------
++
++** emacspeak-realaudio-browse
++
++Browse RAM file before playing the selected component.
++
++------------------------------------------------------------
++
++** emacspeak-realaudio-get-current-time-in-seconds
++
++Return current time in seconds.
++
++------------------------------------------------------------
++
++** emacspeak-realaudio-play
++
++Play a realaudio stream.  Uses files from your Realaudio
++shortcuts directory for completion.  See documentation for
++user configurable variable emacspeak-realaudio-shortcuts-directory. 
++
++------------------------------------------------------------
++
++** emacspeak-realaudio-set-end-mark
++
++Set end mark. Default is to set marker to current play time.
++Mark is specified in seconds.
++
++------------------------------------------------------------
++
++** emacspeak-realaudio-set-start-mark
++
++Set start mark. Default is to set marker to current play time.
++Mark is specified in seconds.
++
++------------------------------------------------------------
++
++** emacspeak-realaudio-write-mp3-clip
++
++Writes specified clip from current mp3 stream.
++Prompts for start and end times as well as file  to save the clippi
++
++------------------------------------------------------------
++
++** emacspeak-remote-connect-to-server	Key Sequence: control e meta r 
++
++Connect to and start using remote speech server running on host host
++and listening on port port.  Host is the hostname of the remote
++server, typically the desktop machine.  Port is the tcp port that that
++host is listening on for speech requests.
++
++------------------------------------------------------------
++
++** emacspeak-remote-quick-connect-to-server
++
++Connect to remote server.
++Does not prompt for host or port, but quietly uses the
++guesses that appear as defaults when prompting.
++Use this once you are sure the guesses are usually correct.
++
++------------------------------------------------------------
++
++** emacspeak-remote-ssh-to-server
++
++Open ssh session to where we came from.
++
++------------------------------------------------------------
++
++** emacspeak-rss-browse	Key Sequence: control e control u 
++
++Browse specified RSS feed.
++
++------------------------------------------------------------
++
++** emacspeak-rss-display
++
++Retrieve and display RSS URL.
++
++------------------------------------------------------------
++
++** emacspeak-speak-current-field	Key Sequence: control e . 
++
++Speak current field.
++A field is
++defined  by Emacs 21.
++
++------------------------------------------------------------
++
++** emacspeak-tabulate-region	Key Sequence: control e i 
++
++Voicifies the white-space of a table if one found.  Optional interactive prefix
++arg mark-fields specifies if the header row information is used to mark fields
++in the white-space.
++
++------------------------------------------------------------
++
++** emacspeak-tapestry-describe-tapestry	Key Sequence: control e meta t 
++
++Describe the current layout of visible buffers in current frame.
++Use interactive prefix arg to get coordinate positions of the
++displayed buffers.
++
++------------------------------------------------------------
++
++** emacspeak-tapestry-select-window-by-name	Key Sequence: control e  cap W  
++
++Select window by the name of the buffer it displays.
++This is useful when using modes like ECB or the new GDB UI where
++  you want to preserve the window layout 
++but quickly switch to a window by name.
++
++------------------------------------------------------------
++
++** emacspeak-url-template-fetch	Key Sequence: control e u 
++
++Fetch a pre-defined resource.
++Use Emacs completion to obtain a list of available resources.
++Resources typically prompt for the relevant information
++before completing the request.
++Optional interactive prefix arg displays documentation for specified resource.
++
++------------------------------------------------------------
++
++** emacspeak-url-template-load
++
++Load URL template resources from specified location.
++
++------------------------------------------------------------
++
++** emacspeak-w3-browse-atom-at-point
++
++Browses Atom url under point.
++
++------------------------------------------------------------
++
++** emacspeak-w3-browse-rss-at-point
++
++Browses RSS url under point.
++
++------------------------------------------------------------
++
++** emacspeak-w3-browse-url-with-style
++
++Browse URL with specified XSL style.
++
++------------------------------------------------------------
++
++** emacspeak-w3-browse-xml-url-with-style
++
++Browse XML URL with specified XSL style.
++
++------------------------------------------------------------
++
++** emacspeak-w3-class-filter-and-follow
++
++Follow url and point, and filter the result by specified class.
++Class can be set locally for a buffer, and overridden with an
++interactive prefix arg. If there is a known rewrite url rule, that is
++used as well.
++
++------------------------------------------------------------
++
++** emacspeak-w3-count-matches
++
++Count matches for locator  in HTML.
++
++------------------------------------------------------------
++
++** emacspeak-w3-count-nested-tables
++
++Count nested tables in HTML.
++
++------------------------------------------------------------
++
++** emacspeak-w3-count-tables
++
++Count  tables in HTML.
++
++------------------------------------------------------------
++
++** emacspeak-w3-curl-url-under-point
++
++Display contents of URL under point using Curl and W3.  The
++document is displayed in a separate buffer. 
++
++------------------------------------------------------------
++
++** emacspeak-w3-extract-by-class
++
++Extract elements having specified class attribute from HTML. Extracts
++specified elements from current WWW page and displays it in a separate
++buffer. Optional arg url specifies the page to extract content from.
++Interactive use provides list of class values as completion.
++
++------------------------------------------------------------
++
++** emacspeak-w3-extract-by-class-list
++
++Extract elements having class specified in list `classes' from HTML.
++Extracts specified elements from current WWW page and displays it in a
++separate buffer. Optional arg url specifies the page to extract
++content from. Interactive use provides list of class values as
++completion. 
++
++------------------------------------------------------------
++
++** emacspeak-w3-extract-media-streams
++
++Extract links to media streams.
++operate on current web page when in a W3 buffer; otherwise prompt for url.
++`prompt-url' is the URL to process. Prompts for URL when called
++interactively. Optional arg `speak' specifies if the result should be
++spoken automatically.
++
++------------------------------------------------------------
++
++** emacspeak-w3-extract-nested-table
++
++Extract nested table specified by `table-index'. Default is to
++operate on current web page when in a W3 buffer; otherwise
++`prompt-url' is the URL to process. Prompts for URL when called
++interactively. Optional arg `speak' specifies if the result should be
++spoken automatically.
++
++------------------------------------------------------------
++
++** emacspeak-w3-extract-nested-table-list
++
++Extract specified list of tables from a WWW page.
++
++------------------------------------------------------------
++
++** emacspeak-w3-extract-node-by-id
++
++Extract specified node from URI.
++
++------------------------------------------------------------
++
++** emacspeak-w3-extract-print-streams
++
++Extract links to printable  streams.
++operate on current web page when in a W3 buffer; otherwise prompt for url.
++`prompt-url' is the URL to process. Prompts for URL when called
++interactively. Optional arg `speak' specifies if the result should be
++spoken automatically.
++
++------------------------------------------------------------
++
++** emacspeak-w3-extract-table-by-match
++
++Extract table containing  specified match.
++ Optional arg url specifies the page to extract content from.
++Interactive prefix arg causes url to be read from the minibuffer.
++
++------------------------------------------------------------
++
++** emacspeak-w3-extract-table-by-position
++
++Extract table at specified position.
++ Optional arg url specifies the page to extract content from.
++Interactive prefix arg causes url to be read from the minibuffer.
++
++------------------------------------------------------------
++
++** emacspeak-w3-extract-tables-by-match-list
++
++Extract specified  tables from a WWW page.
++Tables are specified by containing  match pattern 
++ found in the match list.
++
++------------------------------------------------------------
++
++** emacspeak-w3-extract-tables-by-position-list
++
++Extract specified list of nested tables from a WWW page.
++Tables are specified by their position in the list 
++nested of tables found in the page.
++
++------------------------------------------------------------
++
++** emacspeak-w3-google-on-this-site
++
++Perform a google search restricted to the current WWW site.
++
++------------------------------------------------------------
++
++** emacspeak-w3-google-similar-to-this-page
++
++Ask Google to find documents similar to this one.
++
++------------------------------------------------------------
++
++** emacspeak-w3-google-who-links-to-this-page
++
++Perform a google search to locate documents that link to the
++current page.
++
++------------------------------------------------------------
++
++** emacspeak-w3-preview-this-buffer
++
++Preview this buffer.
++
++------------------------------------------------------------
++
++** emacspeak-w3-preview-this-region
++
++Preview this region.
++
++------------------------------------------------------------
++
++** emacspeak-w3-realaudio-play-url-at-point
++
++Play url under point as realaudio
++
++------------------------------------------------------------
++
++** emacspeak-w3-set-xsl-keep-result
++
++Set value of `emacspeak-w3-xsl-keep-result'.
++
++------------------------------------------------------------
++
++** emacspeak-w3-xpath-filter-and-follow
++
++Follow url and point, and filter the result by specified xpath.
++XPath can be set locally for a buffer, and overridden with an
++interactive prefix arg. If there is a known rewrite url rule, that is
++used as well.
++
++------------------------------------------------------------
++
++** emacspeak-w3-xsl-toggle
++
++Toggle  application of XSL transformations.
++This uses XSLT Processor xsltproc available as part of the
++libxslt package.
++
++------------------------------------------------------------
++
++** emacspeak-w3-xslt-apply
++
++Apply specified transformation to current page.
++
++------------------------------------------------------------
++
++** emacspeak-w3-xslt-filter
++
++Extract elements matching specified XPath path locator
++from HTML.  Extracts specified elements from current WWW
++page and displays it in a separate buffer.  Optional arg url
++specifies the page to extract table from.
++Optional arg COMPLEMENT inverts the filter.  
++
++------------------------------------------------------------
++
++** emacspeak-w3-xslt-select
++
++Select XSL transformation applied to WWW pages before they are displayed .
++
++------------------------------------------------------------
++
++** emacspeak-websearch-dispatch	Key Sequence: control e ? 
++
++Launches specific websearch queries.
++Press `?' to list available search engines.
++Once selected, the selected searcher prompts for additional information as appropriate.
++When using W3,  this interface attempts to speak the most relevant information on the result page.
++
++------------------------------------------------------------
++
++** emacspeak-websearch-emapspeak-near-my-location
++
++Perform search relative to `my-location'.
++
++------------------------------------------------------------
++
++** emacspeak-websearch-google
++
++Perform a Google search.
++Optional interactive prefix arg `lucky' is equivalent to hitting the 
++I'm Feeling Lucky button on Google.
++
++------------------------------------------------------------
++
++** emacspeak-websearch-google-search-in-date-range
++
++Use this from inside the calendar to do Google date-range searches.
++
++------------------------------------------------------------
++
++** emacspeak-websearch-usenet	Key Sequence: control e  cap U  
++
++Prompt and browse a Usenet newsgroup.
++Optional interactive prefix arg results in prompting for a search term.
++
++------------------------------------------------------------
++
++** emacspeak-websearch-usenet-search
++
++Search a Usenet newsgroup.
++
++------------------------------------------------------------
++
++** emacspeak-xml-shell
++
++Start Xml-Shell on contents of system-id.
++
++  
++
++Local variables:
++ mode: outline
++paragraph-separate: "[ ]*$"
++end:
++
+--- emacspeak-24.orig/debian/emacspeakconfig
++++ emacspeak-24/debian/emacspeakconfig
+@@ -0,0 +1,473 @@
++#!/bin/sh
++#
++#  emacspeakconfig - configuration script for emacspeak
++#
++#  This script sets values in /etc/emacspeak.conf, which override the
++#  defaults compiled into emacspeak TCL scripts and .elc files.
++#  Values in the user's environment will override those in
++#  /etc/emacspeak.conf
++#
++#  Written by Jim Van Zandt <jrv@debian.org> for Debian Linux,
++#  and hereby placed in the public domain for use by anyone.
++
++set -e
++
++CFG=/etc/emacspeak.conf
++GROUPFILE=/etc/group
++DRIVERDIR=/usr/lib/emacs/common/emacspeak/drivers
++USUAL=/usr/share/emacs/site-lisp/emacspeak
++
++# on a Slackware or Red Hat system, a user may attempt configuration
++# with awk missing.
++if [ -x /usr/bin/awk -o -x /bin/awk ]; then true; else
++cat <<EOF
++
++awk is missing.
++Please execute /usr/sbin/emacspeakconfig again after installing it.
++
++EOF
++    echo -n "Press Enter: "; read junk;
++    exit 1;
++fi
++
++set -- `getopt i $*`
++if test $? != 0
++then
++    echo 'Usage: emacspeakconfig [-i]'
++    exit 2
++fi
++initial=no
++for i
++do
++    case "$i"
++    in
++       	-i)
++       		initial=yes; shift;;
++       	--)
++       		shift; break;;
++    esac
++done
++
++#echo initial=$initial
++
++# if there is no configuration file, then create one
++if [ -s $CFG ]; then
++  true
++else
++cat >$CFG  <<\EOF
++# emacspeak configuration file
++#
++#
++if [ "$DTK_PROGRAM" = "" ]; then
++  DTK_PROGRAM=
++fi
++if [ "$DTK_TCL" = "" ]; then
++  DTK_TCL=
++fi
++if [ "$DTK_PORT" = "" ]; then
++  DTK_PORT=
++fi
++if [ "$DTK_DEVICE" = "" ]; then
++  DTK_DEVICE=
++fi
++export DTK_PROGRAM DTK_PORT DTK_DEVICE
++if [ "$DTK_TCL" != "" ]; then export DTK_TCL; fi
++EOF
++fi
++
++# if the configuration file does not set the DTK_DEVICE variable, then
++# add that section
++if grep 'export.*DTK_DEVICE' $CFG >/dev/null ; then
++  true
++else
++    awk '
++    / *export/{
++	print "if [ \"$DTK_DEVICE\" = \"\" ]; then";
++	print "DTK_DEVICE=";
++	print "fi";
++	print "export DTK_PROGRAM DTK_PORT DTK_DEVICE";
++	print "if [ \"$DTK_TCL\" != \"\" ]; then export DTK_TCL; fi";
++	next;}
++	{print;}' $CFG > $CFG.TMP && mv $CFG.TMP $CFG
++fi
++
++# return success if answer is "yes"
++yesno() {
++# first argument is question
++# second argument is default answer
++while true; do
++    echo -n "$1 [$2]: "; read ans;
++    if [ "$ans" = "" ]; then ans=$2; fi
++    if [ "$ans" = "y" -o "$ans" = "Y" -o "$ans" = "yes" ]; then return 0; fi
++    if [ "$ans" = "n" -o "$ans" = "N" -o "$ans" = "no" ]; then return 1; fi
++done
++}
++
++# set TEXT to a string typed by the user
++text() {
++# first argument is question
++# second argument is default answer
++echo -n "$1 [$2]: "; read ans;
++if [ "$ans" = "" ]; then ans=$2; fi
++TEXT=$ans
++}
++
++# get parameters for some new synthesizer
++request_params() {
++    text "Please enter the name of the synthesizer" "$DEVICE"; DEVICE=$TEXT
++    if [ "$TCL" = "tcl" ]; then IS_TCL=y; else IS_TCL=n; fi
++    if yesno "Is the speech server a TCL script? " $IS_TCL ; then 
++	echo "These files in $USUAL/servers appear to be TCL scripts:"
++	(cd $USUAL/servers; grep -l dectalk_globals * 2>/dev/null)
++        text "Please enter the name (not path) of the $DEVICE speech server" \
++	    ${PROGRAM:-$TCL}
++        PROGRAM=$TEXT
++	TCL=tcl; 
++    else 
++        text "Please enter the full path name of the $DEVICE speech server" \
++	${PROGRAM:-$TCL}
++	TCL=$TEXT
++	PROGRAM=; 
++    fi;
++    if echo $PORT|grep '^/dev/ttyS' >/dev/null; then ans=y; else ans=n; fi;
++    if yesno "Is the $DEVICE connected to a serial port?" $ans ; then
++	true;
++    else
++	valid=no;
++	while [ "$valid" = "no" ]; do
++            text "Please enter the device (for example, /dev/lp0): " \
++                ${PORT:-/dev/lp0}
++	    PORT=$TEXT; 
++	    if check_port; then valid=yes; fi
++	done
++	HAVE_PORT=yes;
++    fi;
++
++# echo "PROGRAM=$PROGRAM, TCL=$TCL, PORT=$PORT"
++}
++
++# print warning if a program does not exist
++check_pgm() {
++if [ -x $TCL -o -x /usr/bin/$TCL ]; then true; else
++    echo
++    echo "NOTICE: Before using Emacspeak, please install"
++    echo "        $TCL"
++    echo
++    echo -n "Press Enter to continue: "; read junk;
++fi
++}
++
++# return success if $PORT is (or will be) a valid character device
++check_port() {
++
++if [ -c "$PORT" ]; then return 0; fi
++echo "$PORT is not a character device"
++yesno "Will $PORT be compiled into the kernel or loaded as a module?" "y"
++}
++
++#	give a user a supplementary group ID
++#
++#       usage:  enroll user1[,user2...]  group1[,group2...]
++enroll() {
++set -e
++awk '
++BEGIN {
++  FS=":";
++  OFS=":";
++  if (ARGC<4) {
++    print "requires two arguments" >"/dev/stderr";
++    exit(1);
++  }
++  userlist=ARGV[1];
++  if (userlist!~/^[a-z][a-z,]*$/) {
++    print "invalid user list" >"/dev/stderr"; 
++    exit(1);
++  }
++  nu=split(userlist,user,",");
++  grouplist=ARGV[2];
++  if (grouplist!~/^[a-z][a-z,]*$/) {
++    print "invalid group list" >"/dev/stderr"; 
++    exit(1);
++  }
++  ng=split(grouplist,group,",");
++#  printf("%d users: ",nu); 
++#  for (i=1; i<=nu; i++) printf("%s ", user[i]); 
++#  printf("\n");
++#  printf("%d groups: ",ng); 
++#  for (i=1; i<=nu; i++) printf("%s ", group[i]); 
++#  printf("\n");
++  ARGC=2;
++  ARGV[1]=ARGV[3];
++}
++{
++  for (i=1; i<=ng; i++) {
++    if ($1~group[i]) {
++      if (NF==3) {		# no group members yet
++	$4=userlist;
++      } else {			# already some group members
++	delete names;
++	delete member;
++	split($4,names,",");
++	for (j in names) {member[names[j]]=1;}
++	for (j=1;j <= nu;j++) {member[user[j]]=1;}
++	$4="";
++	for (name in member) {$4=$4 "," name;}
++	$4=substr($4, 2);
++      }
++    }
++  }
++  print;
++}' $1 $2 $GROUPFILE >$GROUPFILE.$$ && mv $GROUPFILE.$$ $GROUPFILE
++}
++
++#	take a supplementary group ID away from a user
++#
++#       usage: dismiss  user1[,user2...]  group1[,group2...]
++dismiss() {
++set -e
++awk '
++BEGIN {
++  FS=":";
++  OFS=":";
++  if (ARGC<4) {
++    print "requires two arguments" >"/dev/stderr";
++    exit(1);
++  }
++  userlist=ARGV[1];
++  if (userlist!~/^[a-z][a-z,]*$/) {
++    print "invalid user list" >"/dev/stderr"; 
++    exit(1);
++  }
++  nu=split(userlist,user,",");
++  grouplist=ARGV[2];
++  if (grouplist!~/^[a-z][a-z,]*$/) {
++    print "invalid group list" >"/dev/stderr"; 
++    exit(1);
++  }
++  ng=split(grouplist,group,",");
++#printf("userlist=%s\n",userlist);
++#printf("%d users: ",nu); for (i=1; i<=nu; i++) printf("%s ", user[i]); printf("\n");
++#printf("%d groups: ",ng); for (i=1; i<=nu; i++) printf("%s ", group[i]); printf("\n");
++  ARGC=2;
++  ARGV[1]=ARGV[3];
++}
++{
++  for (i=1; i<=ng; i++) {
++    if ($1~group[i]) {
++      if (NF==3) {		# no group members yet
++      } else {			# already some group members
++	delete names;
++	delete member;
++	split($4,names,",");
++	for (j in names) {member[names[j]]=1;}
++	for (j=1;j <= nu;j++) {delete member[user[j]];}
++	$4="";
++	for (name in member) {$4=$4 "," name;}
++	$4=substr($4, 2);
++      }
++    }
++  }
++  print;
++}' $1 $2 $GROUPFILE >$GROUPFILE.$$ && mv $GROUPFILE.$$ $GROUPFILE
++}
++
++# get the current parameter values (if any) from the configuration file
++if [ -s $CFG ]; then
++   PORT=`awk 'BEGIN{FS="="}/^ *DTK_PORT/{print $2}' $CFG`
++   TCL=`awk 'BEGIN{FS="="}/^ *DTK_TCL/{print $2}' $CFG`
++   PROGRAM=`awk 'BEGIN{FS="="}/^ *DTK_PROGRAM/{print $2}' $CFG`
++   DEVICE=`awk '
++   / *DTK_DEVICE="?.*"?/{
++	word=substr($0,index($0,"=")+1);
++	gsub(/\"/,"",word);
++	if (length(word) == 0) word="DECtalk Express";
++	print word;
++   }' $CFG`
++fi
++HAVE_PORT=no;
++
++#echo initial values are: PROGRAM=$PROGRAM TCL=$TCL PORT=$PORT DEVICE=$DEVICE
++#echo getting speech server choice
++
++# There must be a file foo.blurb in $BLURBS for each distinct
++# combination of speech server and hardware device.  It contains lines
++# beginning with a single word and a colon (anything else is ignored).
++# The valid words are
++#   blurb: the description to print
++#   device: value for DTK_DEVICE (supplies default for next time)
++#   tcl: value for DTK_TCL
++#   program: value for DTK_PROGRAM
++
++# get synthesizer name
++if [ $initial = no -o "$PROGRAM" = "" -o "$TCL" = "" ]; then
++    valid=no
++    while [ $valid = no ]; do
++
++	# first pass: print menu
++    	awk '
++    	BEGIN {
++    	  printf("Please enter the number of your choice:\n\n");
++    	  ARGC=1;
++    	  cmd = "ls " ARGV[1] "/blurbs/*.blurb";
++    	  while (cmd|getline >0){bname[++n] = $1;}
++    	  for (i = 1; i <= n; i++){
++    	    while (getline < bname[i] > 0){
++    	      if ($0 ~ /^blurb:/){$1 = ""; blurb[i] = $0;}
++    	      if ($0 ~ /^program:/){program[i] = $2;}
++    	      if ($0 ~ /^tcl:/){tcl[i] = $2;}
++    	      if ($0 ~ /^device:/){$1 = ""; device[i] = $0;}
++    	    }
++    	    close(bname[i]);
++    	    printf("  %2d %s\n", i, blurb[i]);
++    	  }
++    	  printf("   o  other.  I can provide the filename\n");
++    	  printf("   a  abort, and restart configuration after\n");
++	  printf("      installation of another speech server package\n"); 
++    	}' $USUAL "$DEVICE"
++
++	# second pass: determine default choice
++    	area=`awk '
++    	BEGIN {
++    	  ARGC=1;
++    	  cmd = "ls " ARGV[1] "/blurbs/*.blurb";
++    	  while (cmd|getline >0){bname[++n] = $1;}
++    	  for (i = 1; i <= n; i++){
++    	    while (getline < bname[i] > 0){
++    	      if ($0 ~ /^blurb:/){$1 = ""; blurb[i] = $0;}
++    	      if ($0 ~ /^program:/){program[i] = $2;}
++    	      if ($0 ~ /^tcl:/){tcl[i] = $2;}
++    	      if ($0 ~ /^device:/){$1 = ""; device[i] = $0;}
++    	    }
++    	    if (index(device[i],ARGV[2])){deflt=i;}
++    	    if (index(device[i],"DECtalk Express")){decexp=i;}
++    	    close(bname[i]);
++    	  }
++    	  if (deflt == 0) print decexp;
++    	  print deflt;
++    	}' $USUAL "$DEVICE" `
++
++	# get answer from user
++	text "Number" $area; area=$TEXT
++
++	# third pass: set shell variables according to his choice
++        eval `awk '
++        BEGIN {
++          ARGC=1;
++          cmd = "ls " ARGV[1] "/blurbs/*.blurb";
++          while (cmd|getline >0){bname[++n] = $1;}
++          for (i = 1; i <= n; i++){
++            while (getline < bname[i] > 0){
++              if ($0 ~ /^blurb:/){$1 = ""; blurb[i] = $0;}
++              if ($0 ~ /^program:/){program[i] = $2;}
++              if ($0 ~ /^tcl:/){tcl[i] = $2;}
++              if ($0 ~ /^device:/){$1 = ""; device[i] = $0;}
++            }
++            if (i == ARGV[2]){
++              sub(/^ */,"",device[i]);
++              printf("PROGRAM=%s; TCL=%s; DEVICE=\"%s\"; valid=yes;\n", \
++        	     program[i], tcl[i], device[i]);
++            }
++          }
++        }' $USUAL $area`
++	if [ "$area" = "a" ]; then exit 0; fi
++	if [ "$area" = "0" -o "$area" = "o" -o "$area" = "O" ]; then
++	    request_params;
++	fi
++	if [ "$PROGRAM" = "none" -o "$PROGRAM" = "" ]; then check_pgm; fi
++    done
++fi
++
++#echo new values are: DEVICE=$DEVICE PROGRAM=$PROGRAM TCL=$TCL PORT=$PORT
++
++# get unix device
++if [ "$DEVICE" = "DoubleTalk PC" ]; then
++    IN_PORT=/dev/dtlk
++else
++    IN_PORT=$PORT
++    if [ "$IN_PORT" = "" -o "$IN_PORT" = "/dev/dtlk" ]; then
++	IN_PORT=/dev/ttyS0;
++    fi
++fi
++if [ $HAVE_PORT = no ]; then
++    if [ $initial = no -o "$PORT" = "" ]; then
++    	valid=no
++    	while [ $valid = no ]; do
++    	    text "
++    Your speech synthesizer is connected to which port, if any?
++    (The first serial port would be /dev/ttyS0.
++    This is ignored for a software synthesizer)" $IN_PORT
++    	    PORT=$TEXT
++    	    if check_port $PORT; then valid=yes; fi
++    	done
++    fi
++fi
++
++#echo " "
++#echo emacspeak is configured for $DEVICE attached to $PORT
++
++# adjust unix device group membership if needed
++if [ -c "$PORT" ]; then
++    DEVICEGROUP=`ls -l -L $PORT|awk '{print $4}'`
++else
++    if [ "$DEVICE" = "DoubleTalk PC" -a -f /etc/makedev.cfg ]; then
++	DEVICEGROUP=`awk '/audio:/{print $4}' /etc/makedev.cfg`
++    else 
++	DEVICEGROUP=audio
++    fi
++    echo "$PORT is assumed to be in group: $DEVICEGROUP"
++fi
++
++if [ $DEVICEGROUP = root ];
++then
++    echo "$PORT is in group: root"
++    echo "please move it to another group with chown,"
++    echo "then repeat emacspeak configuration"
++    exit 1
++fi
++
++# skip the enrolling of additional users if there is already at least
++# one user, and it's the initial installation
++MEMBERS=`grep ^${DEVICEGROUP} $GROUPFILE|awk 'BEGIN{FS=":"}{print $4}'`
++if [ "$MEMBERS" = "" -o $initial = no ];
++then
++    echo " "
++    echo $PORT can be accessed by members of the group: $DEVICEGROUP.
++    if [ "$MEMBERS" = "" ]; 
++    then echo "Currently, no users are in group $DEVICEGROUP";
++    else echo "Currently, these users are in group $DEVICEGROUP: $MEMBERS";
++    fi
++    finished=no
++    while [ $finished = no ]; do
++	echo " "
++	echo "If you wish to enroll any other users into group $DEVICEGROUP,"
++	echo "(even if their accounts have not been created yet),"
++	echo -n "please list their usernames here separated by commas: "
++	read USERS
++	if [ "$USERS" = "" ] || enroll $USERS $DEVICEGROUP; then 
++	    finished=yes; 
++	fi
++    done
++    finished=no
++    while [ $finished = no ]; do
++	echo " "
++	echo "If you wish to remove any users from group $DEVICEGROUP,"
++	echo -n "please list their usernames here separated by commas: "
++	read USERS
++	if [ "$USERS" = "" ] || dismiss $USERS $DEVICEGROUP; then 
++	    finished=yes; 
++	fi
++    done
++fi
++
++echo " "
++echo "You may reconfigure emacspeak at any time by running emacspeakconfig as root"
++
++# make sure the group has both read and write permissions
++if [ -e "$PORT" ]; then chmod g+rw $PORT; fi
++
++# update the configuration file    
++sed -e "s@^ *DTK_PROGRAM=.*@  DTK_PROGRAM=$PROGRAM@" \
++    -e "s@^ *DTK_PORT=.*@  DTK_PORT=$PORT@" \
++    -e "s@^ *DTK_TCL=.*@  DTK_TCL=$TCL@" \
++    -e "s@^ *DTK_DEVICE=.*@  DTK_DEVICE=\"$DEVICE\"@" \
++    $CFG > $CFG.TMP && mv $CFG.TMP $CFG
+--- emacspeak-24.orig/debian/emacsen-startup
++++ emacspeak-24/debian/emacsen-startup
+@@ -0,0 +1,21 @@
++;; -*-emacs-lisp-*-
++;; /etc/emacs/site-start.d/50emacspeak.el
++;;
++;; Emacs startup file for the Debian emacspeak package
++;;
++;; Originally contributed by Nils Naumann <naumann@unileoben.ac.at>
++;; Modified by Dirk Eddelbuettel <edd@debian.org>
++;; Adapted for dh-make by Jim Van Zandt <jrv@vanzandt.mv.com>
++
++;; The emacspeak package follows the Debian/GNU Linux 'emacsen' policy and
++;; byte-compiles its elisp files for each 'emacs flavor' (emacs19,
++;; xemacs19, emacs20, xemacs20...).  The compiled code is then
++;; installed in a subdirectory of the respective site-lisp directory.
++;; We have to add this to the load-path:
++(let ((package-dir (concat "/usr/share/"
++                           (symbol-name flavor)
++                           "/site-lisp/emacspeak"))
++      (source-dir "/usr/share/emacs/site-list/emacspeak"))
++  (when (file-directory-p package-dir)
++        (setq load-path (cons package-dir (cons source-dir load-path)))))
++
+--- emacspeak-24.orig/debian/emacspeak.conf
++++ emacspeak-24/debian/emacspeak.conf
+@@ -0,0 +1,17 @@
++# emacspeak configuration file
++#
++#
++if [ "$DTK_PROGRAM" = "" ]; then
++  DTK_PROGRAM=
++fi
++if [ "$DTK_PORT" = "" ]; then
++  DTK_PORT=
++fi
++if [ "$DTK_TCL" = "" ]; then
++  DTK_TCL=
++fi
++if [ "$DTK_DEVICE" = "" ]; then
++  DTK_DEVICE=
++fi
++export DTK_PROGRAM DTK_PORT DTK_DEVICE
++if [ "$DTK_TCL" != "" ]; then export DTK_TCL; fi
+--- emacspeak-24.orig/debian/emacspeak-initialization
++++ emacspeak-24/debian/emacspeak-initialization
+@@ -0,0 +1,35 @@
++Following is Raman's sample code to add to ~/.emacs to start
++emacspeak.  File locations are different in a Debian system.  - Jim Van Zandt
++
++emacspeak initialization...
++Anyone who copies this blindly without bothering to
++understand what it does will get what they deserve:-)
++
++    ;;{{{ Load and customize emacspeak 
++
++    
++    (unless (featurep 'emacspeak)
++      (load-file
++       (expand-file-name "~/emacs/lisp/emacspeak/emacspeak-setup.el")))
++    
++    (when (featurep 'emacspeak)
++      (declare (special emacspeak-play-program emacspeak-play-args
++                        emacspeak-auditory-icon-function
++                        dtk-default-speech-rate))
++      (if (file-exists-p "/usr/demo/SOUND/play")
++          (setq
++           emacspeak-play-program "/usr/demo/SOUND/play"
++           emacspeak-play-args "-i"
++           emacspeak-auditory-icon-function
++           'emacspeak-play-auditory-icon))
++      (if (file-exists-p "/usr/bin/audioplay")
++          (setq
++           emacspeak-play-program "/usr/bin/audioplay"
++           emacspeak-play-args "-i"
++           emacspeak-auditory-icon-function 'emacspeak-play-auditory-icon))
++      (setq dtk-default-speech-rate 485)
++      (emacspeak-pronounce-load-dictionaries "~/.emacspeak/.dictionary")
++      (dtk-set-rate 480 t)
++      (unless blackdog-p (emacspeak-toggle-auditory-icons t)))
++
++    ;;}}}
+--- emacspeak-24.orig/debian/decexp.blurb
++++ emacspeak-24/debian/decexp.blurb
+@@ -0,0 +1,4 @@
++blurb: DECtalk Express
++program: dtk-exp
++tcl: tcl
++device: DECtalk Express
+--- emacspeak-24.orig/debian/decmv.blurb
++++ emacspeak-24/debian/decmv.blurb
+@@ -0,0 +1,4 @@
++blurb: DECtalk Multivoice
++program: dtk-mv
++tcl: tcl
++device: DECtalk Multivoice
+--- emacspeak-24.orig/debian/decsoft.blurb
++++ emacspeak-24/debian/decsoft.blurb
+@@ -0,0 +1,4 @@
++blurb: Software DECtalk
++program: dtk-soft
++tcl: tcl
++device: sound card with Software DECtalk
+--- emacspeak-24.orig/debian/decthree.blurb
++++ emacspeak-24/debian/decthree.blurb
+@@ -0,0 +1,4 @@
++blurb: DECtalk 3
++program: dtk-mv
++tcl: tcl
++device: DECtalk 3
+--- emacspeak-24.orig/debian/dtksoft.blurb
++++ emacspeak-24/debian/dtksoft.blurb
+@@ -0,0 +1,4 @@
++blurb: Software DECtalk
++program: dtk-soft
++tcl: tcl
++device: Software DECtalk
+--- emacspeak-24.orig/debian/outloud.blurb
++++ emacspeak-24/debian/outloud.blurb
+@@ -0,0 +1,4 @@
++blurb: ViaVoice Outloud
++program: outloud
++tcl: tcl
++device: ViaVoice Outloud
+--- emacspeak-24.orig/debian/remote-tcl.blurb
++++ emacspeak-24/debian/remote-tcl.blurb
+@@ -0,0 +1,4 @@
++blurb: Remote DECtalk server
++program: remote-tcl
++tcl: /usr/share/emacs/site-lisp/emacspeak/servers/remote-tcl
++device: a speech server on another computer
+--- emacspeak-24.orig/debian/emacspeak.1
++++ emacspeak-24/debian/emacspeak.1
+@@ -0,0 +1,58 @@
++..\"{{{  Title                    Emacs major mode should be: -*- nroff -*-
++.TH EMACSPEAK 1 "December 1, 1999"
++..\"}}}
++..\"{{{  Name
++.SH NAME
++emacspeak \- speech output interface to Emacs
++..\"}}}
++..\"{{{  Synopsis
++.SH SYNOPSIS
++.ad l
++.\" commands only
++.BR emacspeak
++.RI "[ " options " ] [ " file... " ]"
++..\"}}}
++..\"{{{  Config
++.SH DESCRIPTION
++This script starts \fBemacs\fP(1) with speech extensions.  \fBemacspeak\fP
++comes with support for the following speech synthesizers: DECtalk Express,
++DECtalk MultiVoice, and software DECtalk on the DEC Alpha.
++.\" or the IBM ViaVoice Outloud.
++Separate speech servers are available to support other synthesizers.
++.P
++\fBemacspeak\fP reads the type of text to speech device and the
++port where it is connected from \fI/etc/emacspeak.conf\fP.
++.P
++For runtime commands supplied by \fBemacspeak\fP, see the
++\fBEmacspeak-HOWTO\fP, or consult the .info file:
++.nf
++.B "    info emacspeak"
++.fi
++.SH OPTIONS
++.TP
++.BI -o
++Use IBM ViaVoice Outloud speech server.
++.TP
++.BI -m
++Use \fBmbrola\fP(1) for speech output.
++.TP
++.BI -q
++Do not process the startup file \fI~/.emacs\fP.
++.SH AUTHOR
++T. V. Raman, Adobe Systems Incorporated  <raman@adobe.com>
++..\"}}}
++..\"{{{
++.SH FILES
++.nf
++\fI/etc/emacspeak.conf\fP
++.fi
++..\"}}}
++..\"{{{  See also
++.SH "SEE ALSO"
++.nf
++.BR emacspeakconfig (8),
++.IR emacspeak.info ,
++.B ftp://leb.net/pub/blinux/emacspeak/blinux.
++
++.fi
++..\"}}}
+--- emacspeak-24.orig/debian/emacspeakconfig.8
++++ emacspeak-24/debian/emacspeakconfig.8
+@@ -0,0 +1,36 @@
++..\"{{{  Title                    Emacs major mode should be: -*- nroff -*-
++.TH EMACSPEAKCONFIG 8 "February 13, 1998"
++..\"}}}
++..\"{{{  Name
++.SH NAME
++emacspeakconfig \- configure emacspeak
++..\"}}}
++..\"{{{  Synopsis
++.SH SYNOPSIS
++.ad l
++.\" commands only
++.BR /usr/sbin/emacspeakconfig " [ " -i " ]"
++..\"}}}
++..\"{{{  Config
++.SH DESCRIPTION
++This script records in \fI/etc/emacspeak.conf\fP the type of text to
++speech device, the device (port) where it is connected, and the name
++of the speech server used to access it.
++.SH OPTIONS
++.IP "\fB\-i\fP"
++Initial configuration: If \fI/etc/emacspeakconfig\fP exists and has
++all the required entries, then leave it unchanged and ask no
++questions.  The default is to ask regardless.
++.SH AUTHOR
++Jim Van Zandt <jrv@debian.org>
++..\"}}}
++..\"{{{
++.SH FILES
++.nf
++\fI/etc/emacspeak.conf\fP
++.fi
++..\"}}}
++..\"{{{  See also
++.SH "SEE ALSO"
++.BR emacspeak (1)
++..\"}}}
+--- emacspeak-24.orig/debian/bbc-channels-on-emacspeak.html
++++ emacspeak-24/debian/bbc-channels-on-emacspeak.html
+@@ -0,0 +1,36 @@
++<html><head><base href="http://emacspeak.blogspot.com"></head><body bgcolor="white" text="black"> 
++<div xmlns="http://www.w3.org/1999/xhtml">
++<p>Since the BBC's various channels are what I listen to the
++most, launching BBC channels has always been a couple of
++keystrokes in Emacspeak. As a first step, directory
++<code>realaudio/radio</code> contains shortcut files for
++launching  live streams from the various BBC channels.</p>
++<p>
++In addition, module <code>emacspeak-url-template</code> defines a
++number of <em>Smart URLs</em> for single-click access to BBC
++programs. The ones I use the most are:</p>
++
++<ul>
++<li><em>Smart URL</em> <code>BBC Channels On Demand</code>, and </li>
++<li><em>Smart URL</em> <code>BBC Genres On Demand</code></li>
++</ul>
++<p>
++These <em>smart URLs</em> prompt for the channel or genre
++respectively and bring up a Web page that lists the various shows
++that are available --- note that the BBC archives shows for a
++whole week.
++The resulting Web page is easy to browse in W3; the most
++effective way to skim the buffer is to repeatedly hit
++<code>i</code> which moves through the various items on the page.
++Hitting <code>e e</code> (that's the letter <code>e</code>
++<em>twice</em>) while on a hyperlink will launch the
++corresponding media stream by calling   a <em>context-aware</em>
++command that knows about transforming the URL to one that
++accesses the program stream; --- note that simply following the
++hyperlink will get you first to a page about the program, rather
++than to the program stream itself.</p>
++<p>To find out what channels and genres are available, browse the
++BBC Web site --- channel and genre names are not hard-wired into
++Emacspeak since these can change over time with channels and
++genres being added or renamed.</p>
++    </div> <br /><br />--<br><font color="gray" size="2">Posted by T. V. Raman to <a href="http://emacspeak.blogspot.com/2006/01/bbc-channels-on-emacspeak.html">emacspeak The Complete Audio Desktop</a> at 1/27/2006 08:43:48 PM</font></body></html>
+--- emacspeak-24.orig/debian/browsing-sourceforge-download-servers.html
++++ emacspeak-24/debian/browsing-sourceforge-download-servers.html
+@@ -0,0 +1,29 @@
++<html><head><base href="http://emacspeak.blogspot.com"></head><body bgcolor="white" text="black"> 
++<div xmlns="http://www.w3.org/1999/xhtml">
++<p>Sourceforge is a nice service, but it can also be painful to
++use because of the heavy-weight Web page design, and the need to
++repeatedly click before you get the download you want.</p>
++<p>The most irksome of these is the download mechanism provided
++by Sourceforge --- where you first need to browse a list of
++download servers, pick a mirror, and then download what you
++want. 
++Emacspeak implements a <em>Smart URL</em> that enables one to
++download from Sourceforge in a single step.</p>
++<p>By default, this uses a North American mirror; the behavior
++can be customized if outside the US.
++Use <em>smart URL</em> <code>Sourceforge Browse Mirror</code> and
++specify the name of a SF hosted project when prompted.
++This brings up the index page for the project's download area,
++sorted by date. Move to the bottom of the page and   hit
++<code>b</code> to move to the latest available download.</p>
++<p>The <em>smart URL</em> sets up the W3 buffer with a
++context-sensitive download function; when on a download link, hit
++<code>C-d</code>
++to start downloading. This command will prompt for the URL;
++rather than hitting <code>return</code> (which would bring you to
++the <em>browse mirrors</em> page, hit <code>M-p</code> to get the
++download URL for your  SF mirror.
++Note that this wizard uses <code>GNU wget</code> to perform the
++download
++via Emacs module <code>w3-wget</code>.</p>
++    </div> <br /><br />--<br><font color="gray" size="2">Posted by T. V. Raman to <a href="http://emacspeak.blogspot.com/2006/01/browsing-sourceforge-download-servers.html">emacspeak The Complete Audio Desktop</a> at 1/27/2006 08:52:45 PM</font></body></html>
+--- emacspeak-24.orig/debian/playing-sudoku-using-auditory-feedback.html
++++ emacspeak-24/debian/playing-sudoku-using-auditory-feedback.html
+@@ -0,0 +1,105 @@
++<html><head><base href="http://emacspeak.blogspot.com"></head><body bgcolor="white" text="black"> 
++<div xmlns="http://www.w3.org/1999/xhtml">
++<p>Emacspeak speech-enables <em>SuDoKu</em> implemented  by <a href="http://www.columbia.edu/~jr2075/elisp/index.html">sudoku.el</a>.
++Speech-enabling games is an effective means of discovering what
++additions one needs to make to an auditory interface for
++working effectively in an eyes-free environment --- this was
++aptly demonstrated a few years ago by identifying interesting
++<em>conversational gestures</em> by speech-enabling the game of
++<code>Tetris</code> --- see  <a href="http://emacspeak.sourceforge.net/raman/publications/assets-98/paper.pdf">Conversational
++Gestures For The Audio Desktop</a> from Assets 1998.</p>
++
++
++<h4>Advicing Interactive Commands</h4>
++<p>As with speech-enabling any Emacs module,
++<code>emacspeak-sudoku</code> <em>advices</em> all interactive
++commands to produce spoken feedback.
++In addition to speaking the cell moved to, all navigation
++commands produce an auditory icon that is a function of whether
++the cell value is mutable ---  original values cannot be changed
++and this is indicated with a distinctive icon.</p>
++
++<h4>Additional Interactive Commands</h4>
++
++<p>Playing SuDoKu effectively requires one to build a good mental
++image of the state of the board as well as the ability to
++effectively query the game for currently active constraints. The
++eye's ability to  quickly move around the board and perceive row,
++column and sub-square constraints needs to be compensated for in
++an eyes-free environment. As an example, it is too difficult to
++build the necessary mental model by just listening to the board
++spoken aloud, or by listening to idnividual cells by navigating
++to them.</p>
++
++<p>Here are the set of additional interactive commands that
++needed to be added in order to be able to play the game
++effectively.</p>
++
++<dl>
++<dt><code>r</code></dt>
++<dd>Speak current row.</dd>
++<dt><code>c</code></dt>
++<dd>Speak current column</dd>
++<dt><code>s</code></dt>
++<dd>Speak current sub-square.</dd>
++<dt><code>R</code></dt>
++<dd>Speak number of remaining cells in current row.</dd>
++<dt><code>C</code></dt>
++<dd>Speak number of remaining cells in current column.</dd>
++<dt><code>S</code></dt>
++<dd>Speak number of remaining cells in current sub-square.</dd>
++<dt><code>d</code></dt>
++<dd>Move to the sub-square below the current sub-square.</dd>
++<dt><code>u</code></dt>
++<dd>Move to the sub-square above the current sub-square.</dd>
++<dt><code>n</code></dt>
++<dd>Move to the next sub-square.</dd>
++<dt><code>p</code></dt>
++<dd>Move to the previous sub-square.</dd>
++<dt><code>a</code></dt>
++<dd>Move to the beginning of current row.</dd>
++<dt><code>e</code></dt>
++<dd>Move to the end of the current row.</dd>
++<dt><code>t</code></dt>
++<dd>Move to the top of the current column.</dd>
++<dt><code>b</code></dt>
++<dd>Move to the bottom of the current column.</dd>
++<dt><code>,</code></dt>
++<dd>Speaks information about the overall <em>distribution</em> of
++numbers on the board.
++<ul>
++<li><code>d</code> --- Conveys how many instances of each digit
++have been filled in.</li>
++<li><code>s</code> --- Conveys number of remaining cells in each
++sub-square.</li>
++<li><code>r</code> --- Conveys number of remaining cells in each
++row.</li>
++<li><code>c</code> --- Conveys number of remaining cells in each
++column.</li>
++</ul>
++</dd>
++<dt><code>/</code></dt>
++<dd>Speaks number of remaining cells in the current board.</dd>
++<dt><code>.</code></dt>
++<dd>Speaks value in current cell.</dd>
++</dl>
++
++<p>Notes on how invormation is spoken:</p>
++<ul>
++<li>Numbers are spoken in groups of 3 to achieve effective
++intonation.</li>
++<li>When navigating by sub-squares, point <em>always</em> moves
++to the top left corner of the sub-square.</li>
++<li>Additional commands bound to <code>M-r</code>,
++<code>M-c</code> and <code>M-s</code> erase the current row,
++column or sub-square respectively. These commands would probably
++be convenient to have independent of whether one is using visual
++output.</li>
++</ul>
++
++<h4>Effectiveness Of The Resulting Interface</h4>
++
++<p>With the above interface in place, the simpler levels of the
++game are a breeze, levels <em>difficult</em> and <em>evil</em>
++are sufficiently challenging to be fun.</p>
++    </div> <br /><br />--<br><font color="gray" size="2">Posted by T. V. Raman to <a href="http://emacspeak.blogspot.com/2006/02/playing-sudoku-using-auditory-feedback.html">emacspeak The Complete Audio Desktop</a> at 2/11/2006 06:04:52 PM</font></body></html>

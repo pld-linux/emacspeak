@@ -1,0 +1,44 @@
+--- emacspeak-24.0/etc/emacspeak.sh.def	2006-05-03 04:54:03.000000000 +0200
++++ n.emacspeak-24.0/etc/emacspeak.sh.def	2006-09-17 13:04:14.000000000 +0200
+@@ -1,35 +1,25 @@
+ #!/bin/sh
+ # emacspeak - execute emacs with speech enhancements
+-#$Id$
+-    if [ -f /etc/emacspeak.conf ]
+-    then
+-    . /etc/emacspeak.conf
+-fi
+-
+-if [ -f $HOME/.emacs ]
+-then
+-	INITSTR="-l $HOME/.emacs"
+-fi
++[ -f /etc/emacspeak.conf ] && . /etc/emacspeak.conf
++[ -z "$EMACS_BIN" ] && EMACS_BIN=/usr/bin/emacs
+ 
+ CL_ALL=""
+ for CL in $* ; do
+ 	if [ "$CL" = "-o" ]; then
+ 		DTK_PROGRAM=stereo-outloud
+-		export DTK_PROGRAM
+ 	elif [ "$CL" = "-m" ]; then
+ 		DTK_PROGRAM=multispeech
+-		export DTK_PROGRAM
+ 	elif [ "$CL" = "-d" ]; then
+ 		DTK_PROGRAM=dtk-soft
+-		export DTK_PROGRAM
+-	elif [ "$CL" = "-q" ]; then
+-		INITSTR=""
+ 	else
+ 		CL_ALL="$CL_ALL $CL"
+ 	fi
+ done
+ 
++export DTK_PROGRAM DTK_PORT DTK_DEVICE EMACS_BIN
++[ -n "$DTK_TCL" ] && export DTK_TCL
+ 
+ EMACS_UNIBYTE=1
+ export EMACS_UNIBYTE
+-exec emacs -q -l <emacspeak-dir>/emacspeak-setup.el $INITSTR $CL_ALL
++
++exec $EMACS_BIN -l /usr/share/emacs/site-lisp/emacspeak/lisp/emacspeak-setup.el $CL_ALL

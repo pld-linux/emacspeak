@@ -1,0 +1,84 @@
+diff -Nur emacspeak-24.0/sawfish/tts.jl n.emacspeak-24.0/sawfish/tts.jl
+--- emacspeak-24.0/sawfish/tts.jl	2006-05-03 04:54:04.000000000 +0200
++++ n.emacspeak-24.0/sawfish/tts.jl	2006-09-17 12:26:43.000000000 +0200
+@@ -77,7 +77,7 @@
+     (start-process tts-process tts-client tts-host
+                    tts-port))
+ 
+-(defvar tts-tcl "/usr/bin/tcl"
++(defvar tts-tcl "/usr/bin/tclsh"
+ "TCL interpreter")
+ 
+ (defvar tts-dtk
+diff -Nur emacspeak-24.0/servers/dsp-outloud n.emacspeak-24.0/servers/dsp-outloud
+--- emacspeak-24.0/servers/dsp-outloud	2006-05-03 04:54:04.000000000 +0200
++++ n.emacspeak-24.0/servers/dsp-outloud	2006-09-17 12:26:02.000000000 +0200
+@@ -1,4 +1,4 @@
+-#!/usr/bin/tcl
++#!/usr/bin/tclsh
+ # Keywords: Emacspeak, ViaVoice Outloud , TCL
+ # {{{ LCD Entry: 
+ 
+diff -Nur emacspeak-24.0/servers/dtk-exp n.emacspeak-24.0/servers/dtk-exp
+--- emacspeak-24.0/servers/dtk-exp	2006-05-03 04:54:04.000000000 +0200
++++ n.emacspeak-24.0/servers/dtk-exp	2006-09-17 12:26:02.000000000 +0200
+@@ -1,4 +1,4 @@
+-#!/usr/bin/tcl
++#!/usr/bin/tclsh
+ # $Id$
+ # Description:  Interfacing to a Dectalk via TCL. 
+ # Keywords: Emacspeak, Dectalk, TCL
+diff -Nur emacspeak-24.0/servers/dtk-mv n.emacspeak-24.0/servers/dtk-mv
+--- emacspeak-24.0/servers/dtk-mv	2006-05-03 04:54:04.000000000 +0200
++++ n.emacspeak-24.0/servers/dtk-mv	2006-09-17 12:26:02.000000000 +0200
+@@ -1,4 +1,4 @@
+-#!/usr/bin/tcl
++#!/usr/bin/tclsh
+ # $Id$
+ # Description:  Interfacing to a Dectalk via TCL. 
+ # Keywords: Emacspeak, Dectalk, TCL
+diff -Nur emacspeak-24.0/servers/dtk-soft n.emacspeak-24.0/servers/dtk-soft
+--- emacspeak-24.0/servers/dtk-soft	2006-05-03 04:54:04.000000000 +0200
++++ n.emacspeak-24.0/servers/dtk-soft	2006-09-17 12:26:02.000000000 +0200
+@@ -1,4 +1,4 @@
+-#!/usr/bin/tcl
++#!/usr/bin/tclsh
+ # Keywords: Emacspeak, Software Dectalk , TCL
+ # {{{ LCD Entry: 
+ 
+diff -Nur emacspeak-24.0/servers/outloud n.emacspeak-24.0/servers/outloud
+--- emacspeak-24.0/servers/outloud	2006-05-03 04:54:04.000000000 +0200
++++ n.emacspeak-24.0/servers/outloud	2006-09-17 12:26:02.000000000 +0200
+@@ -1,4 +1,4 @@
+-#!/usr/bin/tcl
++#!/usr/bin/tclsh
+ # Keywords: Emacspeak, ViaVoice Outloud , TCL
+ # {{{ LCD Entry: 
+ 
+diff -Nur emacspeak-24.0/servers/speech-server n.emacspeak-24.0/servers/speech-server
+--- emacspeak-24.0/servers/speech-server	2006-05-03 04:54:04.000000000 +0200
++++ n.emacspeak-24.0/servers/speech-server	2006-09-17 12:26:02.000000000 +0200
+@@ -1,4 +1,4 @@
+-#!/usr/bin/tcl
++#!/usr/bin/tclsh
+ # $Id$
+ # Description:  Speech server
+ #Usage: tcl speech-server port device-specific-script
+diff -Nur emacspeak-24.0/servers/ssh-dtk-exp n.emacspeak-24.0/servers/ssh-dtk-exp
+--- emacspeak-24.0/servers/ssh-dtk-exp	2006-05-03 04:54:04.000000000 +0200
++++ n.emacspeak-24.0/servers/ssh-dtk-exp	2006-09-17 12:26:02.000000000 +0200
+@@ -1,4 +1,4 @@
+-#!/usr/bin/tcl
++#!/usr/bin/tclsh
+ #$Id$
+ #Description: Launch a TTS server on a remote host.
+ #Copyright (C) 1995 -- 2003, T. V. Raman 
+diff -Nur emacspeak-24.0/servers/ssh-outloud n.emacspeak-24.0/servers/ssh-outloud
+--- emacspeak-24.0/servers/ssh-outloud	2006-05-03 04:54:04.000000000 +0200
++++ n.emacspeak-24.0/servers/ssh-outloud	2006-09-17 12:26:02.000000000 +0200
+@@ -1,4 +1,4 @@
+-#!/usr/bin/tcl
++#!/usr/bin/tclsh
+ #$Id$
+ #Description: Launch a TTS server on a remote host. via ssh
+ #Copyright (C) 1995 -- 2003, T. V. Raman 

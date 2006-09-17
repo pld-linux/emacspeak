@@ -1,0 +1,193 @@
+diff -Nur p0/Makefile p1/Makefile
+--- p0/Makefile	2006-05-03 04:54:05.000000000 +0200
++++ p1/Makefile	2006-09-17 11:10:24.000000000 +0200
+@@ -122,13 +122,15 @@
+ ##### Site  Configuration #####
+ MAKE=make
+ prefix = /usr
++datadir = $(prefix)/share
+ # where executables go
+ bindir = ${prefix}/bin
+ # where info files should go
+-infodir = ${prefix}/share/info
++infodir = $(datadir)/info
++mandir = $(datadir)/man
+ # where the emacspeak library directory should go
+ #for older emacsuns use /usr/lib
+-libparentdir = ${prefix}/share/emacs/site-lisp
++libparentdir = $(datadir)/emacs/site-lisp
+ # where  all emacspeak  files should go
+ libdir =$(libparentdir)/emacspeak
+ #directory where we are building
+@@ -244,53 +246,56 @@
+ 
+ install:
+ 	$(MAKE) config SRC=$(libdir)
+-	  $(INSTALL)  -d $(libparentdir) 
+-	  $(INSTALL) -d $(libdir) 
+-	touch $(libdir)/.nosearch
+-	  $(INSTALL) -d $(libdir)/lisp
+-	$(INSTALL) -d $(libdir)/lisp/xml-forms
+-	$(INSTALL) -d $(libdir)/lisp/atom-blogger
+-	$(INSTALL) -d $(libdir)/etc
+-	$(INSTALL) -d $(libdir)/sawfish
+-	$(INSTALL) -d $(libdir)/xsl
+-	$(INSTALL) -d $(libdir)/user-guide
+-	$(INSTALL) -d $(libdir)/install-guide
+-	  $(INSTALL) -m 0644  lisp/*.el lisp/*.elc  $(libdir)/lisp
+-	$(INSTALL) -m 0644  lisp/xml-forms/*.xml   $(libdir)/lisp/xml-forms
+-	$(INSTALL) -m 0644  lisp/atom-blogger/*.el    $(libdir)/lisp/atom-blogger
+-	$(INSTALL) -m 0644  lisp/atom-blogger/*.xsl    $(libdir)/lisp/atom-blogger
+-	$(INSTALL) -m 0644  sawfish/*.jl sawfish/sawfishrc   $(libdir)/sawfish
+-	$(INSTALL) -m 0644  xsl/*.xsl    $(libdir)/xsl
+-	$(INSTALL) -m 0644  ${UGUIDE}   $(libdir)/user-guide
+-	$(INSTALL) -m 0644  ${IGUIDE}   $(libdir)/install-guide
+-	$(INSTALL) -d $(libdir)/sounds
+-	$(INSTALL) -d $(libdir)/servers
+-	$(INSTALL) -d $(libdir)/servers/linux-outloud
+-	$(INSTALL)  -m 755 ${OUTLOUD}  $(libdir)/servers/linux-outloud
+-	$(INSTALL) -d $(libdir)/servers/software-dtk
+-	$(INSTALL)  -m 755 ${DTKTTS}  $(libdir)/servers/software-dtk
+-	$(INSTALL)  -m 755 ${TCL_PROGRAMS}  $(libdir)/servers
+-	$(INSTALL) -m 0644   ${NEWS}   $(libdir)/etc
+-	cp   ${MISC}   $(libdir)/etc
+-	$(CP) -r $(SOUNDS) $(libdir)/sounds
+-	chmod -R go+rX  $(libdir)/sounds
+-	$(CP) -r $(REALAUDIO) $(libdir)
+-	chmod -R go+rX  $(libdir)/realaudio
+-	$(CP) -r $(SHOUTCAST) $(libdir)
+-	chmod -R go+rX  $(libdir)/shoutcast
+-	$(INSTALL) -d $(libdir)/etc/forms
+-	$(INSTALL)  -m 0644 $(FORMS) $(libdir)/etc/forms
+-	$(INSTALL) -d $(libdir)/etc/tables
+-	$(INSTALL)  -m 0644 $(TABLE_SAMPLES) $(libdir)/etc/tables
+-	$(INSTALL) -d $(bindir)
+-	$(INSTALL) -m 0755  etc/emacspeak.sh $(bindir)/emacspeak
+-	$(INSTALL) -d $(infodir)
+-	cd info; \
+-	$(MAKE) install infodir=$(infodir)
++	$(INSTALL)  -d $(DESTDIR)$(libparentdir) 
++	$(INSTALL) -d $(DESTDIR)$(libdir) 
++	touch $(DESTDIR)$(libdir)/.nosearch
++	$(INSTALL) -d $(DESTDIR)$(libdir)/lisp
++	$(INSTALL) -d $(DESTDIR)$(libdir)/lisp/xml-forms
++	$(INSTALL) -d $(DESTDIR)$(libdir)/lisp/atom-blogger
++	$(INSTALL) -d $(DESTDIR)$(libdir)/etc
++	$(INSTALL) -d $(DESTDIR)$(libdir)/sawfish
++	$(INSTALL) -d $(DESTDIR)$(libdir)/xsl
++	$(INSTALL) -d $(DESTDIR)$(libdir)/user-guide
++	$(INSTALL) -d $(DESTDIR)$(libdir)/install-guide
++	$(INSTALL) -d $(DESTDIR)$(libdir)/blurbs
++	$(INSTALL) -d $(DESTDIR)$(infodir)
++	$(INSTALL) -d $(DESTDIR)$(mandir)/man1
++	$(INSTALL) -m 0644  lisp/*.el lisp/*.elc  $(DESTDIR)$(libdir)/lisp
++	$(INSTALL) -m 0644  lisp/xml-forms/*.xml   $(DESTDIR)$(libdir)/lisp/xml-forms
++	$(INSTALL) -m 0644  lisp/atom-blogger/*.el    $(DESTDIR)$(libdir)/lisp/atom-blogger
++	$(INSTALL) -m 0644  lisp/atom-blogger/*.xsl    $(DESTDIR)$(libdir)/lisp/atom-blogger
++	$(INSTALL) -m 0644  sawfish/*.jl sawfish/sawfishrc   $(DESTDIR)$(libdir)/sawfish
++	$(INSTALL) -m 0644  xsl/*.xsl    $(DESTDIR)$(libdir)/xsl
++	$(INSTALL) -m 0644  ${UGUIDE}   $(DESTDIR)$(libdir)/user-guide
++	$(INSTALL) -m 0644  ${IGUIDE}   $(DESTDIR)$(libdir)/install-guide
++	$(INSTALL) -m 0644  debian/*.blurb   $(DESTDIR)$(libdir)/blurbs
++	$(INSTALL) -d $(DESTDIR)$(libdir)/sounds
++	$(INSTALL) -d $(DESTDIR)$(libdir)/servers
++	$(INSTALL) -d $(DESTDIR)$(libdir)/servers/linux-outloud
++	$(INSTALL)  -m 755 ${OUTLOUD}  $(DESTDIR)$(libdir)/servers/linux-outloud
++	$(INSTALL) -d $(DESTDIR)$(libdir)/servers/software-dtk
++	$(INSTALL)  -m 755 ${DTKTTS}  $(DESTDIR)$(libdir)/servers/software-dtk
++	$(INSTALL)  -m 755 ${TCL_PROGRAMS}  $(DESTDIR)$(libdir)/servers
++	$(INSTALL) -m 0644   ${NEWS}   $(DESTDIR)$(libdir)/etc
++	cp   ${MISC}   $(DESTDIR)$(libdir)/etc
++	$(CP) -r $(SOUNDS) $(DESTDIR)$(libdir)/sounds
++	chmod -R go+rX  $(DESTDIR)$(libdir)/sounds
++	$(CP) -r $(REALAUDIO) $(DESTDIR)$(libdir)
++	chmod -R go+rX  $(DESTDIR)$(libdir)/realaudio
++	$(CP) -r $(SHOUTCAST) $(DESTDIR)$(libdir)
++	chmod -R go+rX  $(DESTDIR)$(libdir)/shoutcast
++	$(INSTALL) -d $(DESTDIR)$(libdir)/etc/forms
++	$(INSTALL)  -m 0644 $(FORMS) $(DESTDIR)$(libdir)/etc/forms
++	$(INSTALL) -d $(DESTDIR)$(libdir)/etc/tables
++	$(INSTALL)  -m 0644 $(TABLE_SAMPLES) $(DESTDIR)$(libdir)/etc/tables
++	$(INSTALL) -d $(DESTDIR)$(bindir)
++	$(INSTALL) -m 0755  etc/emacspeak.sh $(DESTDIR)$(bindir)/emacspeak
++	$(INSTALL) -m644 debian/*.1 $(DESTDIR)$(mandir)/man1
++	$(MAKE) -C info install infodir=$(DESTDIR)$(infodir)
+ 
+ uninstall:
+-	rm -rf $(infodir)/emacspeak.info* $(bindir)/emacspeak
+-	  rm -rf $(libdir)
++	rm -rf $(DESTDIR)$(infodir)/emacspeak.info* $(DESTDIR)$(bindir)/emacspeak
++	  rm -rf $(DESTDIR)$(libdir)
+ 
+ 
+ # }}}
+diff -Nur p0/info/Makefile p1/info/Makefile
+--- p0/info/Makefile	2006-05-03 04:54:04.000000000 +0200
++++ p1/info/Makefile	2006-09-17 11:10:24.000000000 +0200
+@@ -3,11 +3,11 @@
+ HTML_FILES=$(shell find . -name '*.html' -print)
+ TEXINDEX=texindex
+ FILES=*.texi
+-MAKEINFO = makeinfo 
++MAKEINFO = makeinfo --no-split --fill-column=70
+ TEX=tex
+ PDFTEX=pdftex
+ TEXI2HTML=texi2html
+-infodir =/usr/share/info#normally supplied by caller
++INFODIR = /usr/share/info
+ INSTALL = install
+ EMACS=emacs
+ 
+@@ -27,16 +27,17 @@
+ 	$(EMACS) -batch -q -l ../utils/document-commands.el
+ 
+ install: emacspeak.info
+-	if test  -x /sbin/install-info ; then \
+-		install-info emacspeak.info /etc/info-dir; \
+-	fi
+-	$(INSTALL)  -m 644 *.info* $(infodir)
++	$(INSTALL) -d $(DESTDIR)$(INFODIR)
++	#/usr/sbin/install-info emacspeak.info $(DESTDIR)$(INFODIR)
++	#/usr/sbin/install-info emacspeak.info /mnt/hda5/tmp/emacspeak-24-root-inter/usr/share/info
++	#install-info: /mnt/hda5/tmp/emacspeak-24-root-inter/usr/share/info: empty file -- wtf?
++	install emacspeak.info* $(DESTDIR)$(INFODIR)
++	$(INSTALL)  -m 644 emacspeak.info* $(DESTDIR)$(INFODIR)
+ 
+ uninstall:
+-	if test  -e /sbin/install-info ; then \
+-		install-info --delete $(infodir)/*.info /etc/info-dir; \
+-	fi
+-	rm -f $(infodir)/*.info*
++	/usr/sbin/install-info --delete $(DESTDIR)$(INFODIR)/emacspeak.info* $(DESTDIR)$(INFODIR)
++	rm -f $(DESTDIR)$(INFODIR)/emacspeak.info*
++
+ emacspeak.info: emacspeak.texi 
+ 
+ introducing-emacspeak.info: introducing-emacspeak.texi
+diff -Nur p0/servers/linux-outloud/Makefile p1/servers/linux-outloud/Makefile
+--- p0/servers/linux-outloud/Makefile	2006-05-03 04:54:04.000000000 +0200
++++ p1/servers/linux-outloud/Makefile	2006-09-17 11:10:24.000000000 +0200
+@@ -30,6 +30,6 @@
+ 	rm -f tcleci.so tcleci.o tcleci.lo
+ 
+ install: tcleci.so
+-	if test ! -d $(libdir) ; then mkdir $(libdir); fi ; \
+-	chmod 755 $(libdir); \
+-	$(INSTALL) -m 0644 $(TTS) $(ATTS) $(libdir)
++	if test ! -d $(DESTDIR)$(libdir) ; then mkdir $(DESTDIR)$(libdir); fi ; \
++	chmod 755 $(DESTDIR)$(libdir); \
++	$(INSTALL) -m 0644 $(TTS) $(ATTS) $(DESTDIR)$(libdir)
+diff -Nur p0/servers/software-dtk/Makefile p1/servers/software-dtk/Makefile
+--- p0/servers/software-dtk/Makefile	2006-05-03 04:54:04.000000000 +0200
++++ p1/servers/software-dtk/Makefile	2006-09-17 11:10:24.000000000 +0200
+@@ -30,8 +30,8 @@
+ 	rm tcldtk.so tcldtk.o
+ 
+ install:
+-	$(INSTALL) -d $(SERVER_DIR)
+-	cp  $(FILES) $(SERVER_DIR)
++	$(INSTALL) -d $(DESTDIR)$(SERVER_DIR)
++	cp  $(FILES) $(DESTDIR)$(SERVER_DIR)
+ 
+ rpm: software-dtk.spec software-dtk.tar.gz
+ 	@cp software-dtk.tar.gz /usr/src/redhat/SOURCES/
