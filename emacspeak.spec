@@ -18,8 +18,8 @@ Patch4:		%{name}-tclsh.patch
 URL:		http://emacspeak.sorceforge.net/
 BuildRequires:	emacs
 BuildRequires:	lynx
-BuildRequires:	texinfo
 BuildRequires:	perl-base
+BuildRequires:	texinfo
 Requires:	emacs
 BuildArch:	noarch
 BuildRoot:	%{tmpdir}/%{name}-%{version}-root-%(id -u -n)
@@ -31,11 +31,20 @@ top of Emacs.  Once you start emacs with emacspeak loaded, you get
 spoken feedback for everything you do.  Your mileage will vary
 depending on how well you can use Emacs.  There is nothing that you
 cannot do inside Emacs :-).  This package includes speech servers
-written in tcl to support the DECtalk Express and DECtalk MultiVoice
+written in Tcl to support the DECtalk Express and DECtalk MultiVoice
 speech synthesizers.  For other synthesizers, look for separate
 speech server packages such as emacspeak-ss and eflite.
 
-#%description -l pl
+%description -l pl
+Emacspeak to system wyj¶cia mówionego pozwalaj±cy niewidomym pracowaæ
+bezpo¶rednio na systemie uniksowym. Emacspeak jest zbudowany w oparciu
+o Emacsa. Po uruchomieniu Emacsa z wczytanym Emacspeakiem otrzymujemy
+mówione potwierdzenie wszystkiego, co robimy. Korzy¶ci zale¿± od tego,
+na ile dobrze umiemy korzystaæ z Emacsa - nie ma niczego, czego by siê
+nie da³o w nim zrobiæ :-). Ten pakiet zawiera serwery mowy napisane w
+Tcl-u do obs³ugi syntezatorów mowy DECtalk Express i DECtalk
+MultiVoice. Dla innych syntezatorów dostêpne s± oddzielne pakiety
+serwerów mowy, takie jak emacspeak-ss czy eflite.
 
 %prep
 %setup -q -n %{name}-%{version}.0
@@ -50,12 +59,12 @@ speech server packages such as emacspeak-ss and eflite.
 %{__make} emacspeak
 
 cd info
-perl -pi-orig -e 's/^\@c\$$Id/@c $$Id/;             
+%{__perl} -pi-orig -e 's/^\@c\$$Id/@c $$Id/;             
 	s/^\@raggedright//;
 	s/\@setfilename\./@setfilename ./' emacspeak.texi
 
-perl -pi-orig -e 's/^\s\{8\}//' tts-server.texi
-perl -pi-orig -e 's/^ @section/@section/' tts.texi
+%{__perl} -pi-orig -e 's/^\s\{8\}//' tts-server.texi
+%{__perl} -pi-orig -e 's/^ @section/@section/' tts.texi
 
 texi2html -monolithic emacspeak.texi
 for x in emacspeak tts-server tts; do
