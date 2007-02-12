@@ -2,7 +2,7 @@
 # TODO:	- rm not needed *.el
 #
 Summary:	Emacspeak - speech output interface to Emacs
-Summary(pl):	Emacspeak - mówiony interfejs wyj¶ciowy dla Emacsa
+Summary(pl.UTF-8):   Emacspeak - mÃ³wiony interfejs wyjÅ›ciowy dla Emacsa
 Name:		emacspeak
 Version:	24
 Release:	0.1
@@ -35,16 +35,16 @@ written in Tcl to support the DECtalk Express and DECtalk MultiVoice
 speech synthesizers.  For other synthesizers, look for separate
 speech server packages such as emacspeak-ss and eflite.
 
-%description -l pl
-Emacspeak to system wyj¶cia mówionego pozwalaj±cy niewidomym pracowaæ
-bezpo¶rednio na systemie uniksowym. Emacspeak jest zbudowany w oparciu
+%description -l pl.UTF-8
+Emacspeak to system wyjÅ›cia mÃ³wionego pozwalajÄ…cy niewidomym pracowaÄ‡
+bezpoÅ›rednio na systemie uniksowym. Emacspeak jest zbudowany w oparciu
 o Emacsa. Po uruchomieniu Emacsa z wczytanym Emacspeakiem otrzymujemy
-mówione potwierdzenie wszystkiego, co robimy. Korzy¶ci zale¿± od tego,
-na ile dobrze umiemy korzystaæ z Emacsa - nie ma niczego, czego by siê
-nie da³o w nim zrobiæ :-). Ten pakiet zawiera serwery mowy napisane w
-Tcl-u do obs³ugi syntezatorów mowy DECtalk Express i DECtalk
-MultiVoice. Dla innych syntezatorów dostêpne s± oddzielne pakiety
-serwerów mowy, takie jak emacspeak-ss czy eflite.
+mÃ³wione potwierdzenie wszystkiego, co robimy. KorzyÅ›ci zaleÅ¼Ä… od tego,
+na ile dobrze umiemy korzystaÄ‡ z Emacsa - nie ma niczego, czego by siÄ™
+nie daÅ‚o w nim zrobiÄ‡ :-). Ten pakiet zawiera serwery mowy napisane w
+Tcl-u do obsÅ‚ugi syntezatorÃ³w mowy DECtalk Express i DECtalk
+MultiVoice. Dla innych syntezatorÃ³w dostÄ™pne sÄ… oddzielne pakiety
+serwerÃ³w mowy, takie jak emacspeak-ss czy eflite.
 
 %prep
 %setup -q -n %{name}-%{version}.0
