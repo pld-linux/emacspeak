@@ -2,7 +2,7 @@
 # TODO:	- rm not needed *.el
 #
 Summary:	Emacspeak - speech output interface to Emacs
-Summary(pl.UTF-8):   Emacspeak - mówiony interfejs wyjściowy dla Emacsa
+Summary(pl.UTF-8):	Emacspeak - mówiony interfejs wyjściowy dla Emacsa
 Name:		emacspeak
 Version:	24
 Release:	0.1
