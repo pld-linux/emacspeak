@@ -5,10 +5,10 @@ Summary:	Emacspeak - speech output interface to Emacs
 Summary(pl.UTF-8):	Emacspeak - mówiony interfejs wyjściowy dla Emacsa
 Name:		emacspeak
 Version:	24
-Release:	0.1
+Release:	1
 License:	GPL v2
 Group:		Applications/Sound
-Source0:	http://dl.sorceforge.net/emacspeak/%{name}-%{version}.tar.bz2
+Source0:	http://emacspeak.googlecode.com/files/%{name}-%{version}.tar.bz2
 # Source0-md5:	3ff73f803dd2562018085cecdbdbef83
 Patch0:		%{name}-debian.patch
 Patch1:		%{name}-Makefile.patch
@@ -17,6 +17,7 @@ Patch3:		%{name}-emacspeak.sh.patch
 Patch4:		%{name}-tclsh.patch
 URL:		http://emacspeak.sorceforge.net/
 BuildRequires:	emacs
+BuildRequires:	emacs-gnus
 BuildRequires:	lynx
 BuildRequires:	perl-base
 BuildRequires:	texinfo
@@ -56,7 +57,7 @@ serwerów mowy, takie jak emacspeak-ss czy eflite.
 
 %build
 %{__make} config
-%{__make} emacspeak
+%{__make} -j1 emacspeak
 
 cd info
 %{__perl} -pi-orig -e 's/^\@c\$$Id/@c $$Id/;             
